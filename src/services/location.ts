@@ -34,6 +34,19 @@ export async function requestPermission(): Promise<PermissionStatus> {
   return mapStatus(status);
 }
 
+/** One-shot current position — used by the map's "recenter on me" button. */
+export async function getCurrentPosition(): Promise<Reading> {
+  const pos = await Location.getCurrentPositionAsync({
+    accuracy: Location.Accuracy.Balanced,
+  });
+  return {
+    lat: pos.coords.latitude,
+    lng: pos.coords.longitude,
+    accuracy: pos.coords.accuracy ?? 999,
+    timestamp: pos.timestamp,
+  };
+}
+
 /**
  * Subscribe to foreground position updates. Returns an async stop function.
  * Tuned for a balance of responsiveness and battery (NFR-1): ~3s / 10m.

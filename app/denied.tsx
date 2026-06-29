@@ -1,13 +1,28 @@
-import { Linking, StyleSheet, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { AppState, Linking, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { Screen } from '@/components/Screen';
 import { CloudFace } from '@/components/CloudFace';
 import { PrimaryButton, TextLink } from '@/components/PrimaryButton';
 import { colors, spacing, type } from '@/theme/tokens';
+import { getPermission } from '@/services/location';
 
 export default function DeniedScreen() {
   const router = useRouter();
+
+  // The only way off this screen is to grant permission. When the user comes
+  // back from the OS Settings (app returns to "active"), re-check — if they
+  // enabled location, advance to the map. Otherwise they stay blocked.
+  useEffect(() => {
+    const recheck = async () => {
+      if ((await getPermission()) === 'granted') router.replace('/map');
+    };
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void recheck();
+    });
+    return () => sub.remove();
+  }, [router]);
 
   const onOpenSettings = async () => {
     try {
@@ -37,8 +52,8 @@ export default function DeniedScreen() {
 
         <View style={styles.cta}>
           <PrimaryButton label="Open Settings" onPress={onOpenSettings} />
-          <TextLink onPress={() => router.replace('/map')} style={{ marginTop: spacing.lg }}>
-            Continue exploring anyway
+          <TextLink onPress={() => router.replace('/permission')} style={{ marginTop: spacing.lg }}>
+            Try again
           </TextLink>
         </View>
       </View>

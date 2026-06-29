@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "build:land-cells": "tsx scripts/buildLandCells.ts"
   },
   "dependencies": {
     "@babel/core": "^7.29.0",

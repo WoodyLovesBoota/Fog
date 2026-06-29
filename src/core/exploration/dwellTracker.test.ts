@@ -26,6 +26,15 @@ describe('DwellTracker', () => {
     expect(t.isVisited('B')).toBe(false); // B only ever got 500ms
   });
 
+  it('seeded cells are already visited and never re-fire', () => {
+    const t = new DwellTracker();
+    t.seed(['A']);
+    expect(t.isVisited('A')).toBe(true);
+    // Dwelling in a restored cell must not emit a fresh "visited" event.
+    expect(t.push('A', 0)).toBeNull();
+    expect(t.push('A', 30_000)).toBeNull();
+  });
+
   it('reports a cell as newly visited only once', () => {
     const t = new DwellTracker();
     t.push('A', 0);

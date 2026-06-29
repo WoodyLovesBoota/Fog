@@ -44,6 +44,15 @@ export class DwellTracker {
     return newlyVisited;
   }
 
+  /**
+   * Pre-mark cells as already visited (e.g. restored from storage on launch).
+   * Seeded cells never re-fire `onVisited`, so standing in a place you've
+   * already cleared won't re-trigger a "new area" event after a relaunch.
+   */
+  seed(cellIds: string[]): void {
+    cellIds.forEach((c) => this.visited.add(c));
+  }
+
   isVisited(cellId: string): boolean {
     return this.visited.has(cellId);
   }

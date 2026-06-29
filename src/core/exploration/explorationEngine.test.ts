@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 
 import { ExplorationEngine } from './explorationEngine';
+import { fixToCell } from './h3';
 import type { LocationProvider, LocationFix } from '../ports/LocationProvider';
 
 /** A test provider we can push fixes through by hand — no GPS, no clock. */
@@ -58,5 +59,24 @@ describe('ExplorationEngine', () => {
     expect(cell).toMatch(/^8[0-9a-f]{14}$/); // an H3 res-10 cell id
     expect(fixCells).toEqual([cell, cell]); // both good fixes mapped to same cell
     expect(visited).toEqual([cell]); // crossed the 20s dwell once
+  });
+
+  it('does not re-fire for cells restored via initialVisited (seed)', async () => {
+    const provider = new FakeProvider();
+    const seedCell = fixToCell(LAT, LNG);
+    const visited: string[] = [];
+    const engine = new ExplorationEngine(
+      provider,
+      (c) => visited.push(c),
+      undefined,
+      [seedCell], // restored from storage
+    );
+    await engine.start();
+
+    // Dwell past the threshold in an already-visited cell.
+    provider.emit({ lat: LAT, lng: LNG, accuracy: 8, timestamp: 0 });
+    provider.emit({ lat: LAT, lng: LNG, accuracy: 8, timestamp: 30_000 });
+
+    expect(visited).toEqual([]); // seeded cell never re-reports
   });
 });

@@ -1,11 +1,14 @@
+import { useCallback, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 import { Screen } from '@/components/Screen';
 import { Hexagon, HexTile } from '@/components/Hexagon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { colors, fonts, radii, shadows, spacing, type } from '@/theme/tokens';
-import { selectStats, useExplore } from '@/features/explore/store';
+import { AsyncVisitedRepository } from '@/adapters/storage/VisitedRepository.async';
+import { loadStats } from '@/services/exploreStats';
+import { TOTAL_LAND_CELLS } from '@/data/singaporeLandCells';
 
 type Row = {
   label: string;
@@ -16,14 +19,35 @@ type Row = {
 
 export default function StatsScreen() {
   const router = useRouter();
-  const state = useExplore();
-  const stats = selectStats(state);
+  const repo = useMemo(() => new AsyncVisitedRepository(), []);
+  const [data, setData] = useState({ areas: 0, distanceM: 0, dayStreak: 0 });
+
+  // Reload real, on-device data every time the screen comes into focus, so it
+  // reflects whatever was explored on the map before navigating here.
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        const [cells, stats] = await Promise.all([repo.load(), loadStats()]);
+        if (active) {
+          setData({ areas: cells.length, distanceM: stats.distanceM, dayStreak: stats.dayStreak });
+        }
+      })();
+      return () => {
+        active = false;
+      };
+    }, [repo]),
+  );
+
+  const pct = Math.min(100, (data.areas / TOTAL_LAND_CELLS) * 100);
+  const pctLabel = pct.toFixed(1);
+  const distKm = (data.distanceM / 1000).toFixed(1);
 
   const rows: Row[] = [
-    { label: 'Areas colored', value: String(stats.exploredCount), tint: 0, shape: 'hex' },
-    { label: 'Distance walked', value: `${stats.distKm} km`, tint: 1, shape: 'circle' },
-    { label: 'Neighborhoods', value: String(stats.hoods), tint: 2, shape: 'diamond' },
-    { label: 'Day streak', value: `${stats.dayStreak} days`, tint: 3, shape: 'circle' },
+    { label: 'Areas colored', value: String(data.areas), tint: 0, shape: 'hex' },
+    { label: 'Distance walked', value: `${distKm} km`, tint: 1, shape: 'circle' },
+    { label: 'Neighborhoods', value: '0', tint: 2, shape: 'diamond' },
+    { label: 'Day streak', value: `${data.dayStreak} days`, tint: 3, shape: 'circle' },
   ];
 
   return (
@@ -45,12 +69,12 @@ export default function StatsScreen() {
           <Hexagon
             size={196}
             ratio={214 / 196}
-            pct={stats.pct}
+            pct={pct}
             inset={18}
             track={colors.hexTrackStrong}
           />
           <View style={styles.heroCenter} pointerEvents="none">
-            <Text style={type.bigPct}>{stats.pctLabel}%</Text>
+            <Text style={type.bigPct}>{pctLabel}%</Text>
             <Text style={styles.heroLabel}>EXPLORED</Text>
           </View>
         </View>

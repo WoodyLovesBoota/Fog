@@ -1,10 +1,12 @@
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { Screen } from '@/components/Screen';
 import { CloudFace } from '@/components/CloudFace';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { colors, fonts, spacing, type } from '@/theme/tokens';
+import { colors, spacing, type } from '@/theme/tokens';
+import { getPermission } from '@/services/location';
 
 const RAINBOW = [
   { size: 160, color: '#F08A5D' },
@@ -39,6 +41,34 @@ function Rainbow() {
 
 export default function SplashScreen() {
   const router = useRouter();
+
+  // Returning-user gate (flow 6.3): if location permission was already granted
+  // on a previous run, the intro / permission / download steps are all behind
+  // us — skip straight to the map (the offline pack is cached, so map.tsx's
+  // download check resolves instantly). We render nothing while deciding so the
+  // intro never flashes for returning users.
+  const [showIntro, setShowIntro] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const status = await getPermission();
+      if (cancelled) return;
+      if (status === 'granted') {
+        router.replace('/map'); // returning user → straight to the map
+      } else if (status === 'denied') {
+        router.replace('/denied'); // asked before & refused → blocked screen
+      } else {
+        setShowIntro(true); // first run (undetermined) → onboarding intro
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  if (!showIntro) return null;
+
   return (
     <Screen colors={colors.splashGradient}>
       <View style={styles.root}>
@@ -76,9 +106,6 @@ export default function SplashScreen() {
 
         <View style={styles.cta}>
           <PrimaryButton large label="Get Started" onPress={() => router.push('/permission')} />
-          <Text style={styles.loginRow}>
-            Already exploring? <Text style={styles.loginLink}>Log in</Text>
-          </Text>
         </View>
       </View>
     </Screen>
@@ -108,12 +135,4 @@ const styles = StyleSheet.create({
   copy: { marginTop: 8 },
   center: { textAlign: 'center' },
   cta: { marginTop: 'auto', marginBottom: 28 },
-  loginRow: {
-    textAlign: 'center',
-    marginTop: 18,
-    fontFamily: fonts.bodyBold,
-    fontSize: 14,
-    color: colors.inkMuted,
-  },
-  loginLink: { color: colors.blue },
 });

@@ -17,15 +17,27 @@ export class ExplorationEngine {
   constructor(
     private provider: LocationProvider,
     private onVisited: (cellId: string) => void,
-    /** Optional per-fix hook, handy for console verification. */
-    private onFix?: (info: { cellId: string; accuracy: number }) => void,
-  ) {}
+    /**
+     * Optional per-accepted-fix hook (after the accuracy filter). Carries the
+     * raw coordinate too, so callers can measure distance walked.
+     */
+    private onFix?: (info: {
+      cellId: string;
+      accuracy: number;
+      lat: number;
+      lng: number;
+    }) => void,
+    /** Cells already visited (restored from storage) — seeded so they don't re-fire. */
+    initialVisited: string[] = [],
+  ) {
+    this.tracker.seed(initialVisited);
+  }
 
   async start(): Promise<void> {
     await this.provider.start((fix: LocationFix) => {
       if (fix.accuracy > MAX_ACCURACY_M) return; // drop noisy fixes
       const cell = fixToCell(fix.lat, fix.lng);
-      this.onFix?.({ cellId: cell, accuracy: fix.accuracy });
+      this.onFix?.({ cellId: cell, accuracy: fix.accuracy, lat: fix.lat, lng: fix.lng });
       const visited = this.tracker.push(cell, fix.timestamp);
       if (visited) this.onVisited(visited);
     });

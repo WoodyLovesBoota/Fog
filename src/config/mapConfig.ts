@@ -11,11 +11,13 @@
 export const STADIA_API_KEY = process.env.EXPO_PUBLIC_STADIA_KEY ?? '';
 
 /**
- * Dark style fits the "fog" mood. If the key is missing the URL still forms,
- * but tile requests will 401 — the download gate surfaces that as an error.
+ * Light, low-saturation style — a calm canvas under the pastel fog + cell tints
+ * so the cute reveal colors stay legible instead of fighting the basemap. If
+ * the key is missing the URL still forms, but tile requests will 401 — the
+ * download gate surfaces that as an error.
  */
 export const MAP_STYLE_URL =
-  `https://tiles.stadiamaps.com/styles/alidade_smooth_dark.json?api_key=${STADIA_API_KEY}`;
+  `https://tiles.stadiamaps.com/styles/alidade_smooth.json?api_key=${STADIA_API_KEY}`;
 
 /** Singapore, roughly centered. MapLibre/GeoJSON order is [lng, lat]. */
 export const SINGAPORE_CENTER: [number, number] = [103.8198, 1.3521];
@@ -32,4 +34,4 @@ export const OFFLINE_MIN_ZOOM = 8;
 export const OFFLINE_MAX_ZOOM = 15;
 
 /** Pack name + the key under which we record "download already finished". */
-export const OFFLINE_PACK_KEY = 'singapore_v1';
+export const OFFLINE_PACK_KEY = 'singapore_v2';
