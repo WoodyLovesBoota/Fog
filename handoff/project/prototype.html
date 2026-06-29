@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; }
+  @keyframes pulse { 0%{ transform:scale(.55); opacity:.55 } 80%{ transform:scale(2.7); opacity:0 } 100%{ opacity:0 } }
+  @keyframes float { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-10px) } }
+  @keyframes floatB { 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-7px) } }
+  @keyframes twinkle { 0%,100%{ transform:scale(.7); opacity:.4 } 50%{ transform:scale(1.1); opacity:1 } }
+  @keyframes fadeIn { from{ opacity:0; transform:translateY(10px) } to{ opacity:1; transform:translateY(0) } }
+  @keyframes bloom { 0%{ transform:scale(.25); opacity:0 } 60%{ opacity:1 } 100%{ transform:scale(1); opacity:1 } }
+  @keyframes cloudPop { from{ opacity:0; transform:scale(.55) } to{ opacity:1; transform:scale(1) } }
+</style>
+</helmet>
+
+<div style="height:100vh;display:flex;align-items:center;justify-content:center;background:#DEDBEF;padding:24px;font-family:Nunito,sans-serif;overflow:hidden">
+  <div ref="{{ phoneRef }}" style="position:relative;width:390px;height:844px;flex:none;transform-origin:center center;border-radius:48px;overflow:hidden;background:#ECEAF8;box-shadow:0 24px 70px rgba(50,50,110,.3)">
+
+    <!-- ===== STATUS BAR ===== -->
+    <div style="position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 30px;z-index:30">
+      <span style="font-size:17px;font-weight:800;color:#2C2F60">9:41</span>
+      <div style="display:flex;align-items:center;gap:7px">
+        <div style="display:flex;align-items:flex-end;gap:2px;height:11px">
+          <div style="width:3px;height:5px;background:#2C2F60;border-radius:1px"></div><div style="width:3px;height:7px;background:#2C2F60;border-radius:1px"></div><div style="width:3px;height:9px;background:#2C2F60;border-radius:1px"></div><div style="width:3px;height:11px;background:#2C2F60;border-radius:1px"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1.5px"><div style="width:23px;height:12px;border:1.6px solid #2C2F60;border-radius:3.5px;padding:1.5px;display:flex"><div style="flex:1;background:#2C2F60;border-radius:1.5px"></div></div><div style="width:1.7px;height:4px;background:#2C2F60;border-radius:1px"></div></div>
+      </div>
+    </div>
+
+    <!-- ============ SPLASH ============ -->
+    <sc-if value="{{ isSplash }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,#ECEAF8 0%,#E7E4F5 100%)">
+        <div style="position:absolute;left:42px;top:170px;width:74px;height:74px;border-radius:50%;background:radial-gradient(circle,#F8C84E,#F4B73D);box-shadow:0 0 36px 8px rgba(246,196,77,.45);z-index:1"></div>
+        <div style="position:absolute;left:120px;top:92px;width:160px;height:82px;overflow:hidden;z-index:1">
+          <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:160px;height:160px;border:8px solid #F08A5D;border-radius:50%"></div>
+          <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:144px;height:144px;border:8px solid #F4A95C;border-radius:50%"></div>
+          <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:128px;height:128px;border:8px solid #F6CE5C;border-radius:50%"></div>
+          <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:112px;height:112px;border:8px solid #79C6A2;border-radius:50%"></div>
+          <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:96px;height:96px;border:8px solid #6FB8E6;border-radius:50%"></div>
+          <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:80px;height:80px;border:8px solid #9E91E0;border-radius:50%"></div>
+        </div>
+        <div style="position:absolute;left:14px;top:154px;animation:floatB 7s ease-in-out infinite;z-index:3"><div style="transform:scale(1);transform-origin:top left"><dc-import name="CloudFace" mood="smile" hint-size="170px,112px"></dc-import></div></div>
+        <div style="position:absolute;left:210px;top:120px;animation:float 6.5s ease-in-out infinite;z-index:3"><div style="transform:scale(1.02);transform-origin:top left"><dc-import name="CloudFace" mood="smile" hint-size="170px,112px"></dc-import></div></div>
+        <div style="position:absolute;left:66px;top:240px;animation:float 6s ease-in-out infinite;z-index:4"><div style="transform:scale(1.62);transform-origin:top left"><dc-import name="CloudFace" mood="happy" hat="{{ true }}" hint-size="170px,112px"></dc-import></div></div>
+        <div style="position:absolute;left:10px;top:374px;animation:floatB 7.5s ease-in-out infinite;z-index:3"><div style="transform:scale(.96);transform-origin:top left"><dc-import name="CloudFace" mood="sleepy" hint-size="170px,112px"></dc-import></div></div>
+        <div style="position:absolute;left:214px;top:374px;animation:float 6.8s ease-in-out infinite;z-index:3"><div style="transform:scale(1.02);transform-origin:top left"><dc-import name="CloudFace" mood="happy" hint-size="170px,112px"></dc-import></div></div>
+
+        <div style="position:absolute;left:34px;right:34px;top:500px;text-align:center">
+          <div style="font-family:Fredoka,sans-serif;font-weight:600;font-size:34px;line-height:1.12;color:#2C2F60;letter-spacing:-.3px">Color the map<br>as you explore</div>
+          <div style="font-size:16px;color:#7E81A8;margin-top:14px;line-height:1.5;font-weight:600">Walk around the city and watch<br>your world fill with color.</div>
+        </div>
+        <div onClick="{{ goPermission }}" style="position:absolute;left:30px;right:30px;bottom:78px;cursor:pointer">
+          <div style="background:linear-gradient(180deg,#88A5F4,#6E91EE);color:#fff;text-align:center;padding:19px;border-radius:30px;font-family:Fredoka,sans-serif;font-weight:500;font-size:21px;box-shadow:0 12px 26px rgba(110,135,235,.42)">Get Started</div>
+          <div style="text-align:center;margin-top:18px;font-weight:700;color:#9A9CC0;font-size:14px">Already exploring? <span style="color:#6E91EE">Log in</span></div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ PERMISSION ============ -->
+    <sc-if value="{{ isPermission }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,#F2F1FB 0%,#E9E6F6 100%)">
+        <div style="position:absolute;left:172px;top:174px;width:46px;height:46px;background:linear-gradient(180deg,#88A5F4,#6E91EE);border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 8px 18px rgba(90,110,220,.4);z-index:5;animation:floatB 4s ease-in-out infinite"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:18px;height:18px;background:#fff;border-radius:50%"></div></div>
+        <div style="position:absolute;left:72px;top:236px;z-index:4"><div style="transform:scale(1.5);transform-origin:top left"><dc-import name="CloudFace" mood="smile" hat="{{ true }}" hint-size="170px,112px"></dc-import></div></div>
+        <div style="position:absolute;left:36px;right:36px;top:486px;text-align:center">
+          <div style="font-family:Fredoka,sans-serif;font-weight:600;font-size:30px;line-height:1.15;color:#2C2F60">Allow location<br>to start coloring</div>
+        </div>
+        <div style="position:absolute;left:50%;top:596px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.7);border:1.5px solid #DAD8EE;border-radius:20px;padding:9px 16px">
+          <div style="width:16px;height:13px;border:2px solid #6E91EE;border-radius:0 0 4px 4px;position:relative;margin-top:5px"><div style="position:absolute;left:50%;top:-7px;transform:translateX(-50%);width:9px;height:9px;border:2px solid #6E91EE;border-bottom:none;border-radius:9px 9px 0 0"></div></div>
+          <span style="font-weight:700;color:#5C7CE0;font-size:13px">Your map stays on your device</span>
+        </div>
+        <div onClick="{{ goMap }}" style="position:absolute;left:30px;right:30px;bottom:130px;cursor:pointer"><div style="background:linear-gradient(180deg,#88A5F4,#6E91EE);color:#fff;text-align:center;padding:19px;border-radius:30px;font-family:Fredoka,sans-serif;font-weight:500;font-size:20px;box-shadow:0 12px 26px rgba(110,135,235,.42)">Allow Location</div></div>
+        <div onClick="{{ goDenied }}" style="position:absolute;left:30px;right:30px;bottom:88px;text-align:center;font-weight:700;color:#9A9CC0;font-size:15px;cursor:pointer">Maybe later</div>
+      </div>
+    </sc-if>
+
+    <!-- ============ DENIED ============ -->
+    <sc-if value="{{ isDenied }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,#F2F1FB 0%,#E9E6F6 100%)">
+        <div style="position:absolute;left:72px;top:250px;z-index:4"><div style="transform:scale(1.5);transform-origin:top left"><dc-import name="CloudFace" mood="sad" hat="{{ true }}" hint-size="170px,112px"></dc-import></div></div>
+        <div style="position:absolute;left:168px;top:386px;width:9px;height:13px;background:#9FB8EC;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(8deg);opacity:.8;z-index:3"></div>
+        <div style="position:absolute;left:212px;top:398px;width:7px;height:11px;background:#9FB8EC;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;transform:rotate(-8deg);opacity:.7;z-index:3"></div>
+        <div style="position:absolute;left:36px;right:36px;top:472px;text-align:center">
+          <div style="font-family:Fredoka,sans-serif;font-weight:600;font-size:29px;line-height:1.15;color:#2C2F60">Location is off</div>
+          <div style="font-size:16px;color:#7E81A8;margin-top:16px;line-height:1.55;font-weight:600">Without location access we can't color<br>your map. Turn it on in Settings to<br>start exploring again.</div>
+        </div>
+        <div onClick="{{ goPermission }}" style="position:absolute;left:30px;right:30px;bottom:130px;cursor:pointer"><div style="background:linear-gradient(180deg,#88A5F4,#6E91EE);color:#fff;text-align:center;padding:19px;border-radius:30px;font-family:Fredoka,sans-serif;font-weight:500;font-size:20px;box-shadow:0 12px 26px rgba(110,135,235,.42)">Open Settings</div></div>
+        <div onClick="{{ goMap }}" style="position:absolute;left:30px;right:30px;bottom:88px;text-align:center;font-weight:700;color:#9A9CC0;font-size:15px;cursor:pointer">Continue exploring anyway</div>
+      </div>
+    </sc-if>
+
+    <!-- ============ MAP ============ -->
+    <sc-if value="{{ isMap }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0">
+        <!-- real map underneath -->
+        <div style="position:absolute;inset:0;z-index:1;background:radial-gradient(ellipse 85% 55% at 94% 96%, #8FC3E6 0%, #B4D8F0 44%, transparent 76%), radial-gradient(ellipse 55% 32% at 6% 90%, #97C6E8 0%, transparent 72%), radial-gradient(circle at 25% 27%, #B7E2A8 0%, #CDE9C2 10%, transparent 18%), radial-gradient(circle at 72% 20%, #B7E2A8 0%, transparent 13%), radial-gradient(circle at 52% 60%, #C6E6BB 0%, transparent 14%), repeating-linear-gradient(0deg, rgba(255,255,255,.6) 0 2px, transparent 2px 46px), repeating-linear-gradient(90deg, rgba(255,255,255,.6) 0 2px, transparent 2px 46px), #ECE7DB">
+          <!-- POIs revealed beneath the fog -->
+          <div style="position:absolute;left:108px;top:294px;width:26px;height:26px;border-radius:50% 50% 50% 0;background:#F2A65A;transform:rotate(-45deg);box-shadow:0 3px 6px rgba(60,40,10,.22)"><div style="position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:9px;height:9px;background:#fff;border-radius:50%"></div></div>
+          <div style="position:absolute;left:248px;top:250px;width:24px;height:24px;border-radius:50% 50% 50% 0;background:#6FBF73;transform:rotate(-45deg);box-shadow:0 3px 6px rgba(20,60,20,.2)"><div style="position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:8px;height:8px;background:#fff;border-radius:50%"></div></div>
+          <div style="position:absolute;left:170px;top:420px;width:24px;height:24px;border-radius:50% 50% 50% 0;background:#5C8FE0;transform:rotate(-45deg);box-shadow:0 3px 6px rgba(20,40,90,.2)"><div style="position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:8px;height:8px;background:#fff;border-radius:50%"></div></div>
+          <div style="position:absolute;left:96px;top:178px;width:22px;height:22px;border-radius:50% 50% 50% 0;background:#9E91E0;transform:rotate(-45deg);box-shadow:0 3px 6px rgba(50,40,90,.2)"><div style="position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:8px;height:8px;background:#fff;border-radius:50%"></div></div>
+          <div style="position:absolute;left:280px;top:360px;width:22px;height:22px;border-radius:50% 50% 50% 0;background:#F2A65A;transform:rotate(-45deg);box-shadow:0 3px 6px rgba(60,40,10,.2)"><div style="position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);width:8px;height:8px;background:#fff;border-radius:50%"></div></div>
+        </div>
+
+        <sc-for list="{{ cells }}" as="cell" hint-placeholder-count="0">
+          <div onClick="{{ cell.tap }}" style="position:absolute;left:{{ cell.x }}px;top:{{ cell.y }}px;width:{{ cell.w }}px;height:{{ cell.h }}px;cursor:pointer;z-index:3">
+            <sc-if value="{{ cell.fogged }}" hint-placeholder-val="{{ true }}">
+              <div style="position:absolute;inset:-8px;background:linear-gradient(135deg, #F6F5FC, #E2E0F2);clip-path:path('M14,74 C4,74 1,62 8,55 C1,48 6,33 16,37 C17,20 32,16 38,28 C43,10 60,10 64,26 C75,22 79,40 70,48 C78,54 74,70 62,72 L62,74 Z');filter:drop-shadow(0 2px 3px rgba(150,150,195,.22));animation:cloudPop .4s ease both"></div>
+            </sc-if>
+          </div>
+        </sc-for>
+
+        <div style="position:absolute;left:{{ dotX }}px;top:{{ dotY }}px;width:18px;height:18px;z-index:9">
+          <div style="position:absolute;inset:0;border-radius:50%;background:#7B9CF0;animation:pulse 2.2s ease-out infinite"></div>
+          <div style="position:absolute;inset:3px;border-radius:50%;background:#5C7CE0;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(60,80,180,.5)"></div>
+        </div>
+
+        <div style="position:absolute;left:20px;top:64px;z-index:15;display:flex;align-items:center;gap:9px;background:#fff;border-radius:22px;padding:7px 15px 7px 8px;box-shadow:0 6px 16px rgba(70,80,140,.18)">
+          <div style="position:relative;width:27px;height:30px">
+            <div style="position:absolute;inset:0;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:conic-gradient(#7B9CF0 0 {{ pct }}%, #E2E0F0 {{ pct }}% 100%)"></div>
+            <div style="position:absolute;inset:5px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#fff"></div>
+          </div>
+          <span style="font-family:Fredoka,sans-serif;font-weight:600;color:#2C2F60;font-size:15px">{{ pctLabel }}% explored</span>
+        </div>
+
+        <div onClick="{{ reset }}" style="position:absolute;right:20px;top:62px;z-index:15;width:46px;height:46px;cursor:pointer">
+          <div style="position:absolute;inset:0;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#fff;box-shadow:0 6px 16px rgba(70,80,140,.16)"></div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:19px;color:#5C7CE0;font-weight:800">↺</div>
+        </div>
+
+        <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;left:50%;top:120px;transform:translateX(-50%);z-index:16;display:flex;align-items:center;gap:8px;background:linear-gradient(180deg,#7FD4B4,#5FC39C);color:#fff;border-radius:22px;padding:10px 18px;box-shadow:0 8px 20px rgba(60,150,110,.34);white-space:nowrap;font-weight:800;font-size:14px;animation:fadeIn .25s ease both">
+            <div style="width:8px;height:8px;background:#fff;border-radius:50%"></div>{{ toast }}
+          </div>
+        </sc-if>
+
+        <div onClick="{{ goStats }}" style="position:absolute;left:20px;bottom:150px;z-index:15;display:flex;align-items:center;gap:8px;background:#fff;border-radius:24px;padding:11px 17px;box-shadow:0 8px 20px rgba(70,80,140,.2);cursor:pointer">
+          <div style="display:flex;align-items:flex-end;gap:2.5px;height:14px"><div style="width:3.5px;height:7px;background:#7B9CF0;border-radius:1.5px"></div><div style="width:3.5px;height:14px;background:#7B9CF0;border-radius:1.5px"></div><div style="width:3.5px;height:10px;background:#7B9CF0;border-radius:1.5px"></div></div>
+          <span style="font-family:Fredoka,sans-serif;font-weight:600;color:#2C2F60;font-size:15px">Stats</span>
+        </div>
+
+        <div style="position:absolute;right:20px;bottom:144px;width:54px;height:54px;border-radius:50%;background:#fff;box-shadow:0 8px 20px rgba(70,80,140,.24);display:flex;align-items:center;justify-content:center;z-index:15;cursor:pointer">
+          <div style="position:relative;width:26px;height:26px">
+            <div style="position:absolute;inset:5px;border:2.5px solid #5C7CE0;border-radius:50%"></div><div style="position:absolute;left:50%;top:50%;width:6px;height:6px;background:#5C7CE0;border-radius:50%;transform:translate(-50%,-50%)"></div><div style="position:absolute;left:50%;top:-1px;width:2.5px;height:6px;background:#5C7CE0;transform:translateX(-50%);border-radius:1px"></div><div style="position:absolute;left:50%;bottom:-1px;width:2.5px;height:6px;background:#5C7CE0;transform:translateX(-50%);border-radius:1px"></div><div style="position:absolute;top:50%;left:-1px;height:2.5px;width:6px;background:#5C7CE0;transform:translateY(-50%);border-radius:1px"></div><div style="position:absolute;top:50%;right:-1px;height:2.5px;width:6px;background:#5C7CE0;transform:translateY(-50%);border-radius:1px"></div>
+          </div>
+        </div>
+
+        <div onClick="{{ startWalk }}" style="position:absolute;left:30px;right:30px;bottom:74px;z-index:15;cursor:pointer">
+          <div style="background:linear-gradient(180deg,#88A5F4,#6E91EE);color:#fff;text-align:center;padding:18px;border-radius:30px;font-family:Fredoka,sans-serif;font-weight:500;font-size:20px;box-shadow:0 12px 26px rgba(110,135,235,.45)">{{ walkLabel }}</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ STATS ============ -->
+    <sc-if value="{{ isStats }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,#F2F1FB 0%,#EAE7F6 100%)">
+        <div style="position:absolute;top:62px;left:24px;right:24px;display:flex;align-items:center;gap:12px">
+          <div onClick="{{ goMap }}" style="width:42px;height:42px;border-radius:14px;background:#fff;box-shadow:0 4px 12px rgba(70,80,140,.12);display:flex;align-items:center;justify-content:center;font-size:20px;color:#5C7CE0;font-weight:800;cursor:pointer">‹</div>
+          <div style="font-family:Fredoka,sans-serif;font-weight:600;font-size:23px;color:#2C2F60">Your Exploration</div>
+        </div>
+
+        <div style="position:absolute;left:50%;top:150px;transform:translateX(-50%);width:196px;height:214px">
+          <div style="position:absolute;inset:0;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:conic-gradient(#7B9CF0 0 {{ pct }}%, #E4E2F2 {{ pct }}% 100%);filter:drop-shadow(0 12px 26px rgba(110,120,200,.22))"></div>
+          <div style="position:absolute;inset:18px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-family:Fredoka,sans-serif;font-size:44px;font-weight:600;color:#2C2F60;line-height:1">{{ pctLabel }}%</div>
+            <div style="color:#8A8DB4;font-size:13px;font-weight:800;letter-spacing:.3px">EXPLORED</div>
+          </div>
+        </div>
+
+        <div style="position:absolute;left:24px;right:24px;top:396px;background:#fff;border-radius:26px;padding:6px 20px;box-shadow:0 10px 28px rgba(70,80,140,.1)">
+          <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1.5px solid #F0EFF8">
+            <div style="width:40px;height:44px;position:relative"><div style="position:absolute;inset:0;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#E8EFFD"></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:13px;height:13px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#7B9CF0"></div></div></div>
+            <div style="flex:1;font-weight:800;color:#2C2F60;font-size:15px">Areas colored</div>
+            <div style="font-family:Fredoka,sans-serif;font-weight:600;color:#2C2F60;font-size:17px">{{ exploredCount }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1.5px solid #F0EFF8">
+            <div style="width:40px;height:44px;position:relative"><div style="position:absolute;inset:0;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#E6F6EE"></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:13px;height:13px;border-radius:50%;background:#5FC39C"></div></div></div>
+            <div style="flex:1;font-weight:800;color:#2C2F60;font-size:15px">Distance walked</div>
+            <div style="font-family:Fredoka,sans-serif;font-weight:600;color:#2C2F60;font-size:17px">{{ distKm }} km</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1.5px solid #F0EFF8">
+            <div style="width:40px;height:44px;position:relative"><div style="position:absolute;inset:0;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#F1ECFB"></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:13px;height:13px;border-radius:3px;background:#9E91E0;transform:rotate(45deg)"></div></div></div>
+            <div style="flex:1;font-weight:800;color:#2C2F60;font-size:15px">Neighborhoods</div>
+            <div style="font-family:Fredoka,sans-serif;font-weight:600;color:#2C2F60;font-size:17px">{{ hoods }}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:12px 0">
+            <div style="width:40px;height:44px;position:relative"><div style="position:absolute;inset:0;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);background:#FBF0E0"></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:13px;height:13px;border-radius:50%;background:#F4B73D"></div></div></div>
+            <div style="flex:1;font-weight:800;color:#2C2F60;font-size:15px">Day streak</div>
+            <div style="font-family:Fredoka,sans-serif;font-weight:600;color:#2C2F60;font-size:17px">4 days</div>
+          </div>
+        </div>
+
+        <div onClick="{{ goMap }}" style="position:absolute;left:30px;right:30px;bottom:78px;cursor:pointer"><div style="background:linear-gradient(180deg,#88A5F4,#6E91EE);color:#fff;text-align:center;padding:18px;border-radius:28px;font-family:Fredoka,sans-serif;font-weight:500;font-size:19px;box-shadow:0 12px 26px rgba(110,135,235,.4)">Back to Map</div></div>
+      </div>
+    </sc-if>
+
+    <!-- home indicator -->
+    <div style="position:absolute;bottom:9px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#2C2F60;opacity:.45;z-index:31"></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.COLS = 8; this.ROWS = 19; this.W = 56; this.H = 64; this.OX = -16; this.OY = -34; this.GY = 0.75;
+    this.initial = [108,107,109,100,101,116,115,117,99,92,124,123,93];
+    this.routeArr = [100,92,93,85,77,76,68,60,61,53,45,44,36,28,29,21,13,12,20,84,118,110,102,94,86,78,70,69];
+    const ex = {}; this.initial.forEach(id => ex[id] = true);
+    this.state = { screen: 'splash', explored: ex, walking: false, toast: null, justColored: null, walkPos: 0, dotId: 108 };
+    this._phone = React.createRef();
+  }
+  componentDidMount() {
+    this._fit = () => {
+      const el = this._phone && this._phone.current;
+      if (!el) return;
+      const s = Math.min(1, (window.innerHeight - 32) / 844);
+      el.style.transform = 'scale(' + s + ')';
+    };
+    window.addEventListener('resize', this._fit);
+    this._fit();
+    setTimeout(this._fit, 60);
+  }
+  componentWillUnmount() { if (this._t) clearInterval(this._t); if (this._tt) clearTimeout(this._tt); if (this._fit) window.removeEventListener('resize', this._fit); }
+  go(screen) {
+    return () => { if (this._t) { clearInterval(this._t); this._t = null; } this.setState({ screen, walking: false }); };
+  }
+  centerOf(id) {
+    const c = id % this.COLS, r = Math.floor(id / this.COLS);
+    const x = c * this.W + (r % 2 ? this.W / 2 : 0) + this.OX;
+    const y = r * (this.H * this.GY) + this.OY;
+    return { x: x + this.W / 2, y: y + this.H / 2 };
+  }
+  colorFor(id) { return ['#9FD6EC', '#A2E3CC', '#B3BEF6'][id % 3]; }
+  flashToast() { if (this._tt) clearTimeout(this._tt); this._tt = setTimeout(() => this.setState({ toast: null }), 1200); }
+  colorCell(id) {
+    this.setState(s => ({ explored: { ...s.explored, [id]: true }, justColored: id, dotId: id, toast: 'New area uncovered · +1 ✦' }));
+    this.flashToast();
+  }
+  tap(id) { return () => { if (!this.state.explored[id]) this.colorCell(id); }; }
+  startWalk() {
+    if (this.state.walking) {
+      if (this._t) { clearInterval(this._t); this._t = null; }
+      this.setState({ walking: false });
+      return;
+    }
+    if (this.state.walkPos >= this.routeArr.length) this.setState({ walkPos: 0 });
+    this.setState({ walking: true });
+    this._t = setInterval(() => {
+      const pos = this.state.walkPos;
+      if (pos >= this.routeArr.length) { clearInterval(this._t); this._t = null; this.setState({ walking: false, toast: null }); return; }
+      const id = this.routeArr[pos];
+      this.setState(s => ({ explored: { ...s.explored, [id]: true }, walkPos: pos + 1, justColored: id, dotId: id, toast: 'New area uncovered · +1 ✦' }));
+      this.flashToast();
+    }, 720);
+  }
+  reset() {
+    if (this._t) { clearInterval(this._t); this._t = null; }
+    const ex = {}; this.initial.forEach(id => ex[id] = true);
+    this.setState({ explored: ex, walking: false, walkPos: 0, dotId: 108, toast: null, justColored: null });
+  }
+  cells() {
+    const arr = []; const total = this.COLS * this.ROWS;
+    for (let id = 0; id < total; id++) {
+      const c = id % this.COLS, r = Math.floor(id / this.COLS);
+      const x = c * this.W + (r % 2 ? this.W / 2 : 0) + this.OX;
+      const y = r * (this.H * this.GY) + this.OY;
+      const ex = !!this.state.explored[id];
+      arr.push({ id, x, y, w: this.W, h: this.H, explored: ex, fogged: !ex, tap: this.tap(id) });
+    }
+    return arr;
+  }
+  renderVals() {
+    const exploredCount = Object.keys(this.state.explored).length;
+    const total = this.COLS * this.ROWS;
+    const pct = Math.min(100, exploredCount / total * 100);
+    const dot = this.centerOf(this.state.dotId);
+    return {
+      isSplash: this.state.screen === 'splash',
+      isPermission: this.state.screen === 'permission',
+      isDenied: this.state.screen === 'denied',
+      isMap: this.state.screen === 'map',
+      isStats: this.state.screen === 'stats',
+      phoneRef: this._phone,
+      cells: this.cells(),
+      dotX: dot.x - 9, dotY: dot.y - 9,
+      pct, pctLabel: pct.toFixed(1),
+      exploredCount, distKm: (exploredCount * 0.045).toFixed(1), hoods: Math.max(1, Math.ceil(exploredCount / 9)),
+      toast: this.state.toast, hasToast: !!this.state.toast,
+      walking: this.state.walking,
+      walkLabel: this.state.walking ? 'Pause' : (this.state.walkPos >= this.routeArr.length ? 'Walk again' : 'Start walking'),
+      goPermission: this.go('permission'), goDenied: this.go('denied'), goMap: this.go('map'), goStats: this.go('stats'),
+      startWalk: () => this.startWalk(), reset: () => this.reset(),
+    };
+  }
+}
+</script>
+</body>
+</html>
