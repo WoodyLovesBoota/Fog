@@ -14,6 +14,7 @@ import {
   GeoJSONSource,
   Layer,
   Map as MapView,
+  Marker,
   UserLocation,
 } from "@maplibre/maplibre-react-native";
 
@@ -41,8 +42,11 @@ import {
   type ExploreStatsData,
 } from "@/services/exploreStats";
 import { TOTAL_LAND_CELLS } from "@/data/singaporeLandCells";
-import { BeaconLayer } from "@/features/map/BeaconLayer";
-import { LANDMARKS } from "@/features/poi/landmarks";
+import { LandmarkPin } from "@/features/map/LandmarkPin";
+import { LANDMARKS, type Landmark } from "@/features/poi/landmarks";
+import { landmarkCell } from "@/features/poi/collectedLandmarks";
+import { LandmarkSheet } from "@/components/LandmarkSheet";
+import { CollectModal } from "@/components/CollectModal";
 import { Hexagon } from "@/components/Hexagon";
 import { BarsIcon, CrosshairIcon } from "@/components/icons";
 import { Toast } from "@/components/Toast";
@@ -88,6 +92,20 @@ export default function MapScreen() {
   const [tracking, setTracking] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  // Tapped landmark + its live distance from the user (meters), for the sheet.
+  const [selected, setSelected] = useState<Landmark | null>(null);
+  const [selectedDistanceM, setSelectedDistanceM] = useState<number | null>(null);
+  // Landmark to celebrate in the "collected" modal (set when its cell uncovers).
+  const [collectLandmark, setCollectLandmark] = useState<Landmark | null>(null);
+
+  // cell id → landmark, so a freshly-visited cell can fire the collected modal
+  // and the sheet can tell whether the selected landmark is collected.
+  const landmarkByCell = useMemo(() => {
+    const m = new Map<string, Landmark>();
+    for (const l of LANDMARKS) m.set(landmarkCell(l), l);
+    return m;
+  }, []);
+
   // One persistence adapter for the whole screen lifetime.
   const repo = useMemo(() => new AsyncVisitedRepository(), []);
 
@@ -131,7 +149,14 @@ export default function MapScreen() {
           // A new area today extends the day streak; persist the whole stat blob.
           statsRef.current = bumpStreak(statsRef.current, Date.now());
           persistStats();
-          flashToast("New area uncovered · +1 ✦");
+          // If this newly-uncovered cell holds a landmark, celebrate it instead
+          // of the generic toast (the modal already says "+1").
+          const lm = landmarkByCell.get(cellId);
+          if (lm) {
+            setCollectLandmark(lm);
+          } else {
+            flashToast("New area uncovered · +1 ✦");
+          }
         },
         ({ lat, lng }) => {
           // Accumulate real walked distance between consecutive accepted fixes.
@@ -153,7 +178,7 @@ export default function MapScreen() {
       engine.start().catch((e) => console.warn("engine start failed", e));
       setTracking(true);
     },
-    [repo, flashToast, persistStats]
+    [repo, flashToast, persistStats, landmarkByCell]
   );
 
   const startDownload = useCallback(() => {
@@ -248,6 +273,31 @@ export default function MapScreen() {
     }
   }, [startEngine, visitedCells, persistStats]);
 
+  // Tap a beacon → open its detail sheet and resolve the live distance from the
+  // user's current position. Distance stays null (shows "계산 중…") if the fix
+  // fails; reopening retries.
+  const openLandmark = useCallback((lm: Landmark) => {
+    setSelected(lm);
+    setSelectedDistanceM(null);
+    getCurrentPosition()
+      .then((pos) => {
+        setSelectedDistanceM(haversineMeters(pos.lat, pos.lng, lm.lat, lm.lng));
+      })
+      .catch((e) => console.warn("distance fix failed", e));
+  }, []);
+
+  const closeSheet = useCallback(() => setSelected(null), []);
+
+  // "View details" on the collected modal → close it, open that landmark's sheet.
+  const viewCollectedDetails = useCallback(() => {
+    if (collectLandmark) openLandmark(collectLandmark);
+    setCollectLandmark(null);
+  }, [collectLandmark, openLandmark]);
+
+  // Is the currently-selected landmark's cell already uncovered?
+  const selectedCollected =
+    selected != null && visitedCells.includes(landmarkCell(selected));
+
   // Recenter FAB: fly the camera back to the current position.
   const recenter = useCallback(async () => {
     try {
@@ -301,16 +351,26 @@ export default function MapScreen() {
         <Camera ref={cameraRef} initialViewState={INITIAL_VIEW_STATE} />
         <UserLocation />
 
-        {/* Landmark beacons — mounted BEFORE the fog so the fog renders on top.
-            Beacons stay hidden under the cloud and only show through where a
-            cell has been visited (punched out), just like the basemap. */}
-        <BeaconLayer landmarks={LANDMARKS} />
-
         {/* Fog-of-war: one mask polygon covers the whole region; visited cells
             are punched out as holes, so the basemap shows through there. */}
         <GeoJSONSource id="fog-mask" data={fogFC}>
           <Layer id="fog-fill" type="fill" paint={FOG_PAINT} />
         </GeoJSONSource>
+
+        {/* Landmark beacons — native Markers sit ON TOP of the fog and stay
+            visible everywhere, names included. Anchored at the pin head; tapping
+            one opens the detail sheet. */}
+        {LANDMARKS.map((lm) => (
+          <Marker
+            key={lm.id}
+            id={lm.id}
+            lngLat={[lm.lng, lm.lat]}
+            anchor="top"
+            onPress={() => openLandmark(lm)}
+          >
+            <LandmarkPin landmark={lm} />
+          </Marker>
+        ))}
       </MapView>
 
       {/* Progress badge (top-left): hex meter + "% explored". */}
@@ -328,6 +388,22 @@ export default function MapScreen() {
 
       {/* "New area uncovered" toast. */}
       <Toast message={toast} />
+
+      {/* Collection pill (bottom-left, above Stats). */}
+      <Pressable
+        onPress={() => router.push("/collection")}
+        accessibilityRole="button"
+        accessibilityLabel="수집한 랜드마크 보기"
+        style={[styles.statsBtn, { bottom: insets.bottom + 148 }]}
+      >
+        <View style={styles.gridIcon}>
+          <View style={[styles.gridCell, { backgroundColor: "#7B9CF0" }]} />
+          <View style={[styles.gridCell, { backgroundColor: "#9FD6EC" }]} />
+          <View style={[styles.gridCell, { backgroundColor: "#A2E3CC" }]} />
+          <View style={[styles.gridCell, { backgroundColor: "#B3BEF6" }]} />
+        </View>
+        <Text style={styles.pillText}>Collection</Text>
+      </Pressable>
 
       {/* Stats pill (bottom-left). */}
       <Pressable
@@ -355,6 +431,21 @@ export default function MapScreen() {
         label={tracking ? "탐험 일시정지" : "탐험 시작"}
         onPress={toggleTracking}
         style={{ ...styles.walkBtn, bottom: insets.bottom + 20 }}
+      />
+
+      {/* "New landmark collected" modal (fires when a landmark's cell uncovers). */}
+      <CollectModal
+        landmark={collectLandmark}
+        onViewDetails={viewCollectedDetails}
+        onDismiss={() => setCollectLandmark(null)}
+      />
+
+      {/* Landmark detail bottom sheet (opens on beacon tap / "View details"). */}
+      <LandmarkSheet
+        landmark={selected}
+        distanceM={selectedDistanceM}
+        collected={selectedCollected}
+        onClose={closeSheet}
       />
     </View>
   );
@@ -408,6 +499,8 @@ const styles = StyleSheet.create({
     ...shadows.card,
   },
   pillText: { fontFamily: fonts.display, fontSize: 15, color: colors.ink },
+  gridIcon: { width: 16, height: 16, flexDirection: "row", flexWrap: "wrap", gap: 3 },
+  gridCell: { width: 6.5, height: 6.5, borderRadius: 2 },
   fab: {
     position: "absolute",
     right: 20,
@@ -419,5 +512,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     ...shadows.card,
   },
-  walkBtn: { position: "absolute", left: 30, right: 30 },
+  walkBtn: { position: "absolute", left: 20, right: 20 },
 });

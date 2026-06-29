@@ -54,6 +54,7 @@ export default function RootLayout() {
           <Stack.Screen name="denied" />
           <Stack.Screen name="map" />
           <Stack.Screen name="stats" options={{ animation: 'slide_from_right' }} />
+          <Stack.Screen name="collection" options={{ animation: 'slide_from_right' }} />
         </Stack>
       </SafeAreaProvider>
     </GestureHandlerRootView>

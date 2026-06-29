@@ -9,6 +9,8 @@ import { colors, fonts, radii, shadows, spacing, type } from '@/theme/tokens';
 import { AsyncVisitedRepository } from '@/adapters/storage/VisitedRepository.async';
 import { loadStats } from '@/services/exploreStats';
 import { TOTAL_LAND_CELLS } from '@/data/singaporeLandCells';
+import { LANDMARKS } from '@/features/poi/landmarks';
+import { countCollected } from '@/features/poi/collectedLandmarks';
 
 type Row = {
   label: string;
@@ -20,7 +22,7 @@ type Row = {
 export default function StatsScreen() {
   const router = useRouter();
   const repo = useMemo(() => new AsyncVisitedRepository(), []);
-  const [data, setData] = useState({ areas: 0, distanceM: 0, dayStreak: 0 });
+  const [data, setData] = useState({ areas: 0, distanceM: 0, dayStreak: 0, collected: 0 });
 
   // Reload real, on-device data every time the screen comes into focus, so it
   // reflects whatever was explored on the map before navigating here.
@@ -30,7 +32,12 @@ export default function StatsScreen() {
       (async () => {
         const [cells, stats] = await Promise.all([repo.load(), loadStats()]);
         if (active) {
-          setData({ areas: cells.length, distanceM: stats.distanceM, dayStreak: stats.dayStreak });
+          setData({
+            areas: cells.length,
+            distanceM: stats.distanceM,
+            dayStreak: stats.dayStreak,
+            collected: countCollected(LANDMARKS, cells),
+          });
         }
       })();
       return () => {
@@ -40,13 +47,14 @@ export default function StatsScreen() {
   );
 
   const pct = Math.min(100, (data.areas / TOTAL_LAND_CELLS) * 100);
-  const pctLabel = pct.toFixed(1);
+  // Two decimals to match the map's "explored" badge exactly.
+  const pctLabel = pct.toFixed(2);
   const distKm = (data.distanceM / 1000).toFixed(1);
 
   const rows: Row[] = [
     { label: 'Areas colored', value: String(data.areas), tint: 0, shape: 'hex' },
     { label: 'Distance walked', value: `${distKm} km`, tint: 1, shape: 'circle' },
-    { label: 'Neighborhoods', value: '0', tint: 2, shape: 'diamond' },
+    { label: 'Collections', value: `${data.collected} / ${LANDMARKS.length}`, tint: 2, shape: 'diamond' },
     { label: 'Day streak', value: `${data.dayStreak} days`, tint: 3, shape: 'circle' },
   ];
 
