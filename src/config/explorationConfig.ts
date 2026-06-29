@@ -26,3 +26,34 @@ export const LOCATION_TIME_INTERVAL_MS = 3_000;
  * dwell accumulator and VISITED never fires. 0 = purely time-based updates.
  */
 export const LOCATION_DISTANCE_M = 0;
+
+// ---- Background tracking (Step 5) -----------------------------------------
+
+/**
+ * Largest gap between two consecutive fixes that still counts toward dwell.
+ * Background location is bursty: the OS may sleep for minutes and then deliver
+ * a batch. Crediting that whole gap to one cell would falsely "paint" wherever
+ * you happened to stop. Anything longer than this is treated as a blank — the
+ * time is dropped, not accumulated. (See {@link applyFix}.)
+ */
+export const MAX_DWELL_GAP_MS = 5 * 60 * 1000;
+
+/**
+ * Background distance filter (meters). Unlike the foreground watch this is
+ * non-zero on purpose: in the background we can't afford a fix every few
+ * seconds. Standing-still dwell still works because the *gap* until the next
+ * move-triggered fix is credited to the cell you were sitting in.
+ */
+export const BG_DISTANCE_M = 10;
+
+/**
+ * Battery saver: the OS may batch background fixes and deliver them at most
+ * this often, instead of waking the JS task on every single update.
+ */
+export const BG_DEFERRED_MS = 10_000;
+
+/**
+ * A jump larger than this between two accepted fixes is GPS noise / a teleport
+ * after a long sleep, not real walking — so it's excluded from distance.
+ */
+export const MAX_STEP_M = 100;

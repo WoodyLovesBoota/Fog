@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  AppState,
   Pressable,
   StyleSheet,
   Text,
@@ -29,18 +30,16 @@ import {
   getLastKnownPosition,
   getPermission,
 } from "@/services/location";
-import { ExplorationEngine } from "@/core/exploration/explorationEngine";
-import { PhoneLocationProvider } from "@/adapters/location/PhoneLocationProvider";
 import { fogMask } from "@/core/exploration/cellGeometry";
 import { haversineMeters } from "@/core/exploration/distance";
 import { AsyncVisitedRepository } from "@/adapters/storage/VisitedRepository.async";
 import {
-  bumpStreak,
-  EMPTY_STATS,
-  loadStats,
-  saveStats,
-  type ExploreStatsData,
-} from "@/services/exploreStats";
+  enableBackgroundTracking,
+  disableBackgroundTracking,
+  startForegroundFallback,
+  stopForegroundFallback,
+} from "@/adapters/location/backgroundTracking";
+import { locationEvents } from "@/core/exploration/locationEvents";
 import { TOTAL_LAND_CELLS } from "@/data/singaporeLandCells";
 import { LandmarkPin } from "@/features/map/LandmarkPin";
 import { LANDMARKS, type Landmark } from "@/features/poi/landmarks";
@@ -61,10 +60,6 @@ const FOG_PAINT = {
   "fill-color": colors.fogGradient[0],
   "fill-opacity": 0.7,
 } as const;
-/** GPS jumps larger than this between accepted fixes are noise, not walking. */
-const MAX_STEP_M = 100;
-/** Persist accumulated distance after this much new ground (avoids per-fix writes). */
-const DISTANCE_FLUSH_M = 25;
 
 /**
  * Real geographic map screen: MapLibre + Stadia tiles, gated behind a one-time
@@ -89,7 +84,10 @@ export default function MapScreen() {
   const router = useRouter();
   const [dl, setDl] = useState<DownloadState>({ status: "idle" });
   const [visitedCells, setVisitedCells] = useState<string[]>([]);
-  const [tracking, setTracking] = useState(false);
+  // 'background' = OS task running (works while away); 'foreground' = fallback
+  // watcher (app open only); 'off' = paused.
+  const [trackingMode, setTrackingMode] = useState<"off" | "foreground" | "background">("off");
+  const tracking = trackingMode !== "off";
   const [toast, setToast] = useState<string | null>(null);
 
   // Tapped landmark + its live distance from the user (meters), for the sheet.
@@ -116,18 +114,7 @@ export default function MapScreen() {
   const progressPct = Math.min(100, (visitedCells.length / TOTAL_LAND_CELLS) * 100);
 
   const cameraRef = useRef<CameraRef>(null);
-  const engineRef = useRef<ExplorationEngine | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  // Derived stats (distance + day streak), accumulated live and persisted.
-  const statsRef = useRef<ExploreStatsData>({ ...EMPTY_STATS });
-  const lastCoordRef = useRef<{ lat: number; lng: number } | null>(null);
-  const savedDistanceRef = useRef(0);
-
-  const persistStats = useCallback(() => {
-    void saveStats(statsRef.current);
-    savedDistanceRef.current = statsRef.current.distanceM;
-  }, []);
 
   const flashToast = useCallback((message: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -135,50 +122,22 @@ export default function MapScreen() {
     toastTimer.current = setTimeout(() => setToast(null), TOAST_MS);
   }, []);
 
-  // Spin up the engine seeded with `seed` (already-visited cells). Each new
-  // visit colors the fog, persists, and flashes a toast.
-  const startEngine = useCallback(
-    (seed: string[]) => {
-      const engine = new ExplorationEngine(
-        new PhoneLocationProvider(),
-        (cellId) => {
-          setVisitedCells((prev) =>
-            prev.includes(cellId) ? prev : [...prev, cellId]
-          );
-          void repo.add([cellId]);
-          // A new area today extends the day streak; persist the whole stat blob.
-          statsRef.current = bumpStreak(statsRef.current, Date.now());
-          persistStats();
-          // If this newly-uncovered cell holds a landmark, celebrate it instead
-          // of the generic toast (the modal already says "+1").
-          const lm = landmarkByCell.get(cellId);
-          if (lm) {
-            setCollectLandmark(lm);
-          } else {
-            flashToast("New area uncovered · +1 ✦");
-          }
-        },
-        ({ lat, lng }) => {
-          // Accumulate real walked distance between consecutive accepted fixes.
-          const prev = lastCoordRef.current;
-          if (prev) {
-            const step = haversineMeters(prev.lat, prev.lng, lat, lng);
-            if (step > 0 && step < MAX_STEP_M) {
-              statsRef.current.distanceM += step;
-              if (statsRef.current.distanceM - savedDistanceRef.current >= DISTANCE_FLUSH_M) {
-                persistStats();
-              }
-            }
-          }
-          lastCoordRef.current = { lat, lng };
-        },
-        seed
-      );
-      engineRef.current = engine;
-      engine.start().catch((e) => console.warn("engine start failed", e));
-      setTracking(true);
+  // A cell crossed the dwell threshold (emitted live by the ingest pipeline).
+  // Distance, day streak and persistence now all happen inside ingest, so the
+  // screen's only job is to paint the fog and celebrate the new area.
+  const handleVisited = useCallback(
+    (cellId: string) => {
+      setVisitedCells((prev) => (prev.includes(cellId) ? prev : [...prev, cellId]));
+      // If this newly-uncovered cell holds a landmark, celebrate it instead of
+      // the generic toast (the modal already says "+1").
+      const lm = landmarkByCell.get(cellId);
+      if (lm) {
+        setCollectLandmark(lm);
+      } else {
+        flashToast("New area uncovered · +1 ✦");
+      }
     },
-    [repo, flashToast, persistStats, landmarkByCell]
+    [flashToast, landmarkByCell]
   );
 
   const startDownload = useCallback(() => {
@@ -207,27 +166,48 @@ export default function MapScreen() {
     };
   }, [router, startDownload]);
 
-  // Restore saved progress + stats once authorized, then start the engine seeded.
+  // Once authorized: subscribe to live visit events, restore the fog from
+  // storage, then start tracking. The ingest pipeline reloads the visited set
+  // each batch, so already-cleared cells never re-fire — no seeding needed.
+  // We deliberately do NOT stop the background task on unmount: continuing to
+  // record while the screen is gone is the entire point of Step 5. Only the
+  // screen-scoped foreground fallback is torn down.
   useEffect(() => {
     if (authorized !== true) return;
     let cancelled = false;
+    const unsubscribe = locationEvents.onVisited(handleVisited);
     (async () => {
-      const [saved, stats] = await Promise.all([repo.load(), loadStats()]);
+      const saved = await repo.load();
+      if (!cancelled) setVisitedCells(saved); // restore the fog
+      const result = await enableBackgroundTracking();
       if (cancelled) return;
-      statsRef.current = stats;
-      savedDistanceRef.current = stats.distanceM;
-      setVisitedCells(saved); // restore the fog
-      startEngine(saved); // seed so restored cells don't re-fire
+      if (result === "denied") {
+        router.replace("/denied");
+        return;
+      }
+      if (result === "foreground-only") {
+        await startForegroundFallback();
+        if (!cancelled) setTrackingMode("foreground");
+      } else {
+        setTrackingMode("background");
+      }
     })();
     return () => {
       cancelled = true;
-      engineRef.current?.stop();
-      engineRef.current = null;
-      lastCoordRef.current = null;
+      unsubscribe();
+      stopForegroundFallback();
       if (toastTimer.current) clearTimeout(toastTimer.current);
-      persistStats(); // flush any unsaved distance
     };
-  }, [authorized, repo, startEngine, persistStats]);
+  }, [authorized, repo, router, handleVisited]);
+
+  // Repaint from storage whenever the app returns to the foreground — this is
+  // how cells cleared by the headless background task while we were away show up.
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (s) => {
+      if (s === "active") void repo.load().then(setVisitedCells);
+    });
+    return () => sub.remove();
+  }, [repo]);
 
   // Snap the camera onto the user as soon as the map is up. We don't wait for
   // the engine's slow high-accuracy first lock: `getLastKnownPosition` returns
@@ -260,21 +240,31 @@ export default function MapScreen() {
     };
   }, [dl.status]);
 
-  // Bottom button: pause/resume live GPS tracking (really stops/starts the watch).
-  const toggleTracking = useCallback(() => {
-    if (engineRef.current) {
-      engineRef.current.stop();
-      engineRef.current = null;
-      lastCoordRef.current = null; // don't bridge a gap across the pause
-      persistStats();
-      setTracking(false);
+  // Bottom button: pause/resume tracking. Resume re-requests permission and
+  // prefers the background task; pause stops whichever driver is live.
+  const toggleTracking = useCallback(async () => {
+    if (trackingMode === "off") {
+      const result = await enableBackgroundTracking();
+      if (result === "denied") {
+        router.replace("/denied");
+      } else if (result === "foreground-only") {
+        await startForegroundFallback();
+        setTrackingMode("foreground");
+      } else {
+        setTrackingMode("background");
+      }
     } else {
-      startEngine(visitedCells);
+      if (trackingMode === "foreground") {
+        stopForegroundFallback();
+      } else {
+        await disableBackgroundTracking();
+      }
+      setTrackingMode("off");
     }
-  }, [startEngine, visitedCells, persistStats]);
+  }, [trackingMode, router]);
 
   // Tap a beacon → open its detail sheet and resolve the live distance from the
-  // user's current position. Distance stays null (shows "계산 중…") if the fix
+  // user's current position. Distance stays null (shows "Calculating…") if the fix
   // fails; reopening retries.
   const openLandmark = useCallback((lm: Landmark) => {
     setSelected(lm);
@@ -318,28 +308,28 @@ export default function MapScreen() {
       >
         {dl.status === "error" ? (
           <>
-            <Text style={styles.title}>지도를 불러오지 못했어요</Text>
+            <Text style={styles.title}>Couldn't load the map</Text>
             <Text style={styles.subtitle} numberOfLines={2}>
               {dl.message}
             </Text>
             <Pressable
               onPress={startDownload}
               accessibilityRole="button"
-              accessibilityLabel="지도 다시 다운로드"
+              accessibilityLabel="Download map again"
               style={styles.retry}
             >
-              <Text style={styles.retryLabel}>다시 시도</Text>
+              <Text style={styles.retryLabel}>Retry</Text>
             </Pressable>
           </>
         ) : dl.status === "downloading" ? (
           <>
             <ActivityIndicator color={colors.blueDeep} />
             <Text style={styles.subtitle}>
-              싱가포르 지도 준비 중… {Math.round(dl.progress)}%
+              Preparing Singapore map… {Math.round(dl.progress)}%
             </Text>
           </>
         ) : null /* 'idle': cache check in flight — show a plain background, not
-                    a spinner, so returning users don't get a "준비 중" flash. */}
+                    a spinner, so returning users don't get a "preparing" flash. */}
       </View>
     );
   }
@@ -393,7 +383,7 @@ export default function MapScreen() {
       <Pressable
         onPress={() => router.push("/collection")}
         accessibilityRole="button"
-        accessibilityLabel="수집한 랜드마크 보기"
+        accessibilityLabel="View collected landmarks"
         style={[styles.statsBtn, { bottom: insets.bottom + 148 }]}
       >
         <View style={styles.gridIcon}>
@@ -409,7 +399,7 @@ export default function MapScreen() {
       <Pressable
         onPress={() => router.push("/stats")}
         accessibilityRole="button"
-        accessibilityLabel="통계 보기"
+        accessibilityLabel="View stats"
         style={[styles.statsBtn, { bottom: insets.bottom + 96 }]}
       >
         <BarsIcon color={colors.blueSoft} size={14} />
@@ -420,15 +410,15 @@ export default function MapScreen() {
       <Pressable
         onPress={recenter}
         accessibilityRole="button"
-        accessibilityLabel="내 위치로 이동"
-        style={[styles.fab, { bottom: insets.bottom + 90 }]}
+        accessibilityLabel="Recenter to my location"
+        style={[styles.fab, { bottom: insets.bottom + 96 }]}
       >
         <CrosshairIcon color={colors.blueDeep} size={26} />
       </Pressable>
 
       {/* Tracking toggle (bottom). */}
       <PrimaryButton
-        label={tracking ? "탐험 일시정지" : "탐험 시작"}
+        label={tracking ? "Pause Exploring" : "Start Exploring"}
         onPress={toggleTracking}
         style={{ ...styles.walkBtn, bottom: insets.bottom + 20 }}
       />

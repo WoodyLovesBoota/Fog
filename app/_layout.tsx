@@ -1,4 +1,5 @@
 import '@/polyfills/textEncoding'; // must precede anything that imports h3-js
+import '@/background/locationTask'; // registers the bg location task at app start
 import 'react-native-gesture-handler';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';

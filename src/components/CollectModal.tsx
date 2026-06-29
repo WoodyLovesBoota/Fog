@@ -24,7 +24,7 @@ export function CollectModal({
 
   return (
     <Modal visible={landmark != null} transparent animationType="fade" onRequestClose={onDismiss} statusBarTranslucent>
-      <Pressable style={styles.backdrop} onPress={onDismiss} accessibilityRole="button" accessibilityLabel="닫기" />
+      <Pressable style={styles.backdrop} onPress={onDismiss} accessibilityRole="button" accessibilityLabel="Close" />
       <View style={styles.center} pointerEvents="box-none">
         {landmark && meta && (
           <View style={styles.card}>

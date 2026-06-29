@@ -8,7 +8,7 @@ import type { ImageSourcePropType } from 'react-native';
  * in `app/map.tsx`. Fill `LANDMARKS` with the real attraction list — the shape
  * below is all the renderer + arrival logic need.
  *
- * Everything the detail sheet shows comes from this record: `name`/`nameKo`,
+ * Everything the detail sheet shows comes from this record: `name`,
  * `description` (blurb), `area`/`hours`/`tip` (the info rows), and `image` (the
  * hero photo). Anything omitted is simply skipped in the sheet.
  */
@@ -27,8 +27,6 @@ export type Landmark = {
   id: string;
   /** Display name (English). */
   name: string;
-  /** Optional Korean display name (shown if you localize the label later). */
-  nameKo?: string;
   category: LandmarkCategory;
   /** Geographic position. WGS84 degrees. */
   lat: number;
@@ -75,7 +73,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'marina-bay-sands',
     name: 'Marina Bay Sands',
-    nameKo: '마리나 베이 샌즈',
     category: 'landmark',
     lat: 1.2834,
     lng: 103.8607,
@@ -89,7 +86,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'merlion-park',
     name: 'Merlion Park',
-    nameKo: '멀라이언 공원',
     category: 'landmark',
     lat: 1.2868,
     lng: 103.8545,
@@ -103,7 +99,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'gardens-by-the-bay',
     name: 'Gardens by the Bay',
-    nameKo: '가든스 바이 더 베이',
     category: 'nature',
     lat: 1.2816,
     lng: 103.8636,
@@ -117,7 +112,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'singapore-flyer',
     name: 'Singapore Flyer',
-    nameKo: '싱가포르 플라이어',
     category: 'entertainment',
     lat: 1.2893,
     lng: 103.8631,
@@ -130,7 +124,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'botanic-gardens',
     name: 'Singapore Botanic Gardens',
-    nameKo: '싱가포르 보타닉 가든',
     category: 'nature',
     lat: 1.3138,
     lng: 103.8159,
@@ -142,7 +135,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'sentosa',
     name: 'Sentosa Island',
-    nameKo: '센토사 섬',
     category: 'entertainment',
     lat: 1.2494,
     lng: 103.8303,
@@ -154,7 +146,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'chinatown',
     name: 'Chinatown',
-    nameKo: '차이나타운',
     category: 'culture',
     lat: 1.2812,
     lng: 103.8447,
@@ -167,7 +158,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'orchard-road',
     name: 'Orchard Road',
-    nameKo: '오차드 로드',
     category: 'shopping',
     lat: 1.3048,
     lng: 103.8318,
@@ -179,7 +169,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'maxwell-food-centre',
     name: 'Maxwell Food Centre',
-    nameKo: '맥스웰 푸드 센터',
     category: 'food',
     lat: 1.2803,
     lng: 103.8447,
@@ -192,7 +181,6 @@ export const LANDMARKS: Landmark[] = [
   {
     id: 'singapore-zoo',
     name: 'Singapore Zoo',
-    nameKo: '싱가포르 동물원',
     category: 'nature',
     lat: 1.4043,
     lng: 103.793,

@@ -24,7 +24,7 @@ const SCREEN_H = Dimensions.get('window').height;
  * Landmark detail bottom sheet (design handoff).
  *
  * Everything shown is read from the `Landmark` record: hero photo (`image`),
- * category, name/nameKo, blurb (`description`) and the info rows
+ * category, name, blurb (`description`) and the info rows
  * (`hours`/`area`/`tip`). Distance is resolved live by the caller.
  *
  * Animation: the backdrop fades in via opacity while the sheet slides up
@@ -76,7 +76,7 @@ export function LandmarkSheet({
     <Modal visible={shown != null} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
       {/* Backdrop: opacity only — does NOT ride up with the sheet. */}
       <Animated.View style={[styles.backdrop, { opacity: anim }]}>
-        <Pressable style={styles.fill} onPress={onClose} accessibilityRole="button" accessibilityLabel="닫기" />
+        <Pressable style={styles.fill} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close" />
       </Animated.View>
 
       <View style={styles.wrap} pointerEvents="box-none">
@@ -130,7 +130,7 @@ function Body({
         <View style={styles.catChip}>
           <Text style={[styles.catChipText, { color: meta.color }]}>{meta.label}</Text>
         </View>
-        <Pressable onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel="닫기">
+        <Pressable onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel="Close">
           <Text style={styles.closeGlyph}>✕</Text>
         </Pressable>
       </View>
@@ -138,7 +138,6 @@ function Body({
       {/* Title + meta. */}
       <View style={styles.titleArea}>
         <Text style={styles.name}>{landmark.name}</Text>
-        {landmark.nameKo ? <Text style={styles.nameKo}>{landmark.nameKo}</Text> : null}
 
         <View style={styles.metaRow}>
           <View style={styles.distChip}>
@@ -185,7 +184,7 @@ function Body({
 
 /** "—" while unknown, "320 m" under 1 km, else "1.2 km". */
 export function formatDistance(distanceM: number | null): string {
-  if (distanceM == null) return '계산 중…';
+  if (distanceM == null) return 'Calculating…';
   if (distanceM < 1000) return `${Math.round(distanceM)} m`;
   return `${(distanceM / 1000).toFixed(1)} km`;
 }
@@ -235,7 +234,6 @@ const styles = StyleSheet.create({
 
   titleArea: { paddingHorizontal: 22, paddingTop: 16 },
   name: { fontFamily: fonts.display, fontSize: 25, color: colors.ink, lineHeight: 28 },
-  nameKo: { fontFamily: fonts.body, fontSize: 14, color: colors.inkSoft, marginTop: 3 },
   metaRow: { flexDirection: 'row', alignItems: 'center', gap: 9, marginTop: 11 },
   distChip: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   distDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.blueSoft },
