@@ -14,6 +14,7 @@ import {
   Camera,
   type CameraRef,
   GeoJSONSource,
+  Images,
   Layer,
   Map as MapView,
   Marker,
@@ -58,11 +59,17 @@ const BACK_EXIT_MS = 2000;
 /** Static initial camera — hoisted so its reference is stable across renders.
     A new object literal here would break <Camera>'s memo every render. */
 const INITIAL_VIEW_STATE = { center: SINGAPORE_CENTER, zoom: 15 } as const;
-/** Static fog paint — hoisted so MapLibre doesn't re-apply the style each render. */
+/** Seamless cloud texture tiled across the fog mask (registered via <Images>). */
+const CLOUD_TILE = require("../assets/cloud-tile.png");
+const CLOUD_IMAGE_ID = "fog-cloud";
+/** Static fog paint — hoisted so MapLibre doesn't re-apply the style each render.
+    `fill-pattern` paints the cloud texture instead of a flat color; the mask is
+    still one feature, so the cloud cover costs nothing per unexplored cell. */
 const FOG_PAINT = {
-  "fill-color": colors.fogGradient[0],
-  "fill-opacity": 0.7,
+  "fill-pattern": CLOUD_IMAGE_ID,
+  "fill-opacity": 0.9,
 } as const;
+const FOG_IMAGES = { [CLOUD_IMAGE_ID]: CLOUD_TILE } as const;
 
 /**
  * Real geographic map screen: MapLibre + Stadia tiles, gated behind a one-time
@@ -312,16 +319,19 @@ export default function MapScreen() {
   const selectedCollected =
     selected != null && visitedCells.includes(landmarkCell(selected));
 
-  // Recenter FAB: snap to the last-known fix instantly (so the button always
-  // *does* something), then refine with a fresh fix.
+  // Recenter FAB: glide the camera from wherever the user panned to onto their
+  // location. We *fly* (animated) rather than jump — flying to the last-known
+  // fix immediately keeps the button responsive, then a fresh fix nudges to the
+  // exact spot. (The old jumpTo teleported straight to the last fix, leaving the
+  // follow-up flyTo nothing to animate, so it looked like an instant cut.)
   const recenter = useCallback(async () => {
     const last = await getLastKnownPosition();
     if (last) {
-      cameraRef.current?.jumpTo({ center: [last.lng, last.lat], zoom: 15 });
+      cameraRef.current?.flyTo({ center: [last.lng, last.lat], zoom: 16, duration: 900 });
     }
     try {
       const pos = await getCurrentPosition();
-      cameraRef.current?.flyTo({ center: [pos.lng, pos.lat], zoom: 16, duration: 600 });
+      cameraRef.current?.flyTo({ center: [pos.lng, pos.lat], zoom: 16, duration: 900 });
     } catch (e) {
       console.warn("recenter failed", e);
     }
@@ -375,8 +385,12 @@ export default function MapScreen() {
         <Camera ref={cameraRef} initialViewState={INITIAL_VIEW_STATE} />
         <UserLocation />
 
-        {/* Fog-of-war: one mask polygon covers the whole region; visited cells
-            are punched out as holes, so the basemap shows through there. */}
+        {/* Register the seamless cloud texture used by the fog fill-pattern. */}
+        <Images images={FOG_IMAGES} />
+
+        {/* Fog-of-war: one mask polygon covers the whole region, painted with a
+            tiled cloud texture; visited cells are punched out as holes, so the
+            basemap shows through there. */}
         <GeoJSONSource id="fog-mask" data={fogFC}>
           <Layer id="fog-fill" type="fill" paint={FOG_PAINT} />
         </GeoJSONSource>
