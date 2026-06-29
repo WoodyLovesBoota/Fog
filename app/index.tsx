@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 
 import { Screen } from '@/components/Screen';
 import { CloudFace } from '@/components/CloudFace';
+import { FloatingCloud } from '@/components/FloatingCloud';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { colors, spacing, type } from '@/theme/tokens';
 import { getPermission } from '@/services/location';
@@ -79,22 +80,23 @@ export default function SplashScreen() {
           <View style={styles.rainbowWrap}>
             <Rainbow />
           </View>
-          {/* floating clouds */}
-          <View style={[styles.cloud, { left: 6, top: 26 }]}>
+          {/* floating clouds — each bobs on its own amplitude/duration/delay
+              so the group drifts out of phase (handoff: float / floatB). */}
+          <FloatingCloud style={[styles.cloud, { left: 6, top: 26 }]} amplitude={7} duration={7000} delay={0}>
             <CloudFace mood="smile" scale={1} />
-          </View>
-          <View style={[styles.cloud, { right: 0, top: 0 }]}>
+          </FloatingCloud>
+          <FloatingCloud style={[styles.cloud, { right: 0, top: 0 }]} amplitude={10} duration={6500} delay={400}>
             <CloudFace mood="smile" scale={1.02} />
-          </View>
-          <View style={[styles.cloud, { left: 44, top: 112, zIndex: 4 }]}>
+          </FloatingCloud>
+          <FloatingCloud style={[styles.cloud, { left: 44, top: 112, zIndex: 4 }]} amplitude={10} duration={6000} delay={200}>
             <CloudFace mood="happy" hat scale={1.55} />
-          </View>
-          <View style={[styles.cloud, { left: 2, top: 250 }]}>
+          </FloatingCloud>
+          <FloatingCloud style={[styles.cloud, { left: 2, top: 250 }]} amplitude={7} duration={7500} delay={600}>
             <CloudFace mood="sleepy" scale={0.96} />
-          </View>
-          <View style={[styles.cloud, { right: 4, top: 250 }]}>
+          </FloatingCloud>
+          <FloatingCloud style={[styles.cloud, { right: 4, top: 250 }]} amplitude={10} duration={6800} delay={300}>
             <CloudFace mood="happy" scale={1.02} />
-          </View>
+          </FloatingCloud>
         </View>
 
         <View style={styles.copy}>

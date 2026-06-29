@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
+  BackHandler,
   Pressable,
   StyleSheet,
   Text,
@@ -52,6 +53,8 @@ import { Toast } from "@/components/Toast";
 import { PrimaryButton } from "@/components/PrimaryButton";
 
 const TOAST_MS = 1400;
+/** Window after a first back press in which a second press exits the app. */
+const BACK_EXIT_MS = 2000;
 /** Static initial camera — hoisted so its reference is stable across renders.
     A new object literal here would break <Camera>'s memo every render. */
 const INITIAL_VIEW_STATE = { center: SINGAPORE_CENTER, zoom: 15 } as const;
@@ -193,6 +196,28 @@ export default function MapScreen() {
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
   }, [authorized, repo, handleVisited]);
+
+  // Android back button: the map is the app's home — backing out of it would
+  // otherwise pop to the onboarding/permission screens still on the stack
+  // (or close instantly). Instead we swallow the first press with a hint and
+  // only exit on a second press within the window — the standard "press back
+  // again to exit" pattern. (iOS never fires hardwareBackPress, so this is a
+  // no-op there.)
+  const lastBackPress = useRef(0);
+  useEffect(() => {
+    const onBack = () => {
+      const now = Date.now();
+      if (now - lastBackPress.current < BACK_EXIT_MS) {
+        BackHandler.exitApp();
+        return true;
+      }
+      lastBackPress.current = now;
+      flashToast("Press back again to exit");
+      return true; // block the default pop to onboarding
+    };
+    const sub = BackHandler.addEventListener("hardwareBackPress", onBack);
+    return () => sub.remove();
+  }, [flashToast]);
 
   // Repaint from storage whenever the app returns to the foreground — this is
   // how cells cleared by the headless background task while we were away show up.

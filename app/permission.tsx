@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 
 import { Screen } from '@/components/Screen';
 import { CloudFace } from '@/components/CloudFace';
+import { FloatingCloud } from '@/components/FloatingCloud';
 import { PrimaryButton, TextLink } from '@/components/PrimaryButton';
 import { colors, fonts, spacing, type } from '@/theme/tokens';
 import { requestPermission } from '@/services/location';
@@ -41,9 +42,9 @@ export default function PermissionScreen() {
           <View style={styles.marker}>
             <View style={styles.markerDot} />
           </View>
-          <View style={styles.cloud}>
+          <FloatingCloud style={styles.cloud} amplitude={8} duration={6500}>
             <CloudFace mood="smile" hat scale={1.5} />
-          </View>
+          </FloatingCloud>
         </View>
 
         <Text style={[type.panelTitle, styles.center]}>Allow location{'\n'}to start coloring</Text>
