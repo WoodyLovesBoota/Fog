@@ -23,7 +23,11 @@ import {
   ensureSingaporePack,
   type DownloadState,
 } from "@/map/downloadSingaporePack";
-import { getCurrentPosition, getPermission } from "@/services/location";
+import {
+  getCurrentPosition,
+  getLastKnownPosition,
+  getPermission,
+} from "@/services/location";
 import { ExplorationEngine } from "@/core/exploration/explorationEngine";
 import { PhoneLocationProvider } from "@/adapters/location/PhoneLocationProvider";
 import { fogMask } from "@/core/exploration/cellGeometry";
@@ -37,12 +41,22 @@ import {
   type ExploreStatsData,
 } from "@/services/exploreStats";
 import { TOTAL_LAND_CELLS } from "@/data/singaporeLandCells";
+import { BeaconLayer } from "@/features/map/BeaconLayer";
+import { LANDMARKS } from "@/features/poi/landmarks";
 import { Hexagon } from "@/components/Hexagon";
 import { BarsIcon, CrosshairIcon } from "@/components/icons";
 import { Toast } from "@/components/Toast";
 import { PrimaryButton } from "@/components/PrimaryButton";
 
 const TOAST_MS = 1400;
+/** Static initial camera — hoisted so its reference is stable across renders.
+    A new object literal here would break <Camera>'s memo every render. */
+const INITIAL_VIEW_STATE = { center: SINGAPORE_CENTER, zoom: 15 } as const;
+/** Static fog paint — hoisted so MapLibre doesn't re-apply the style each render. */
+const FOG_PAINT = {
+  "fill-color": colors.fogGradient[0],
+  "fill-opacity": 0.7,
+} as const;
 /** GPS jumps larger than this between accepted fixes are noise, not walking. */
 const MAX_STEP_M = 100;
 /** Persist accumulated distance after this much new ground (avoids per-fix writes). */
@@ -190,6 +204,37 @@ export default function MapScreen() {
     };
   }, [authorized, repo, startEngine, persistStats]);
 
+  // Snap the camera onto the user as soon as the map is up. We don't wait for
+  // the engine's slow high-accuracy first lock: `getLastKnownPosition` returns
+  // the OS-cached fix instantly (so the map jumps off the Singapore default
+  // immediately), then a fresh `getCurrentPosition` refines it. Only fires once
+  // per mount, so the user can pan freely afterwards.
+  useEffect(() => {
+    if (dl.status !== "done") return;
+    let cancelled = false;
+    (async () => {
+      const last = await getLastKnownPosition();
+      if (!cancelled && last) {
+        cameraRef.current?.jumpTo({ center: [last.lng, last.lat], zoom: 15 });
+      }
+      try {
+        const pos = await getCurrentPosition();
+        if (!cancelled) {
+          cameraRef.current?.flyTo({
+            center: [pos.lng, pos.lat],
+            zoom: 16,
+            duration: 500,
+          });
+        }
+      } catch (e) {
+        console.warn("initial center failed", e);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [dl.status]);
+
   // Bottom button: pause/resume live GPS tracking (really stops/starts the watch).
   const toggleTracking = useCallback(() => {
     if (engineRef.current) {
@@ -236,17 +281,15 @@ export default function MapScreen() {
               <Text style={styles.retryLabel}>다시 시도</Text>
             </Pressable>
           </>
-        ) : (
+        ) : dl.status === "downloading" ? (
           <>
             <ActivityIndicator color={colors.blueDeep} />
             <Text style={styles.subtitle}>
-              싱가포르 지도 준비 중…
-              {dl.status === "downloading"
-                ? ` ${Math.round(dl.progress)}%`
-                : ""}
+              싱가포르 지도 준비 중… {Math.round(dl.progress)}%
             </Text>
           </>
-        )}
+        ) : null /* 'idle': cache check in flight — show a plain background, not
+                    a spinner, so returning users don't get a "준비 중" flash. */}
       </View>
     );
   }
@@ -255,24 +298,18 @@ export default function MapScreen() {
     <View style={styles.page}>
       {/* After download this renders from the offline cache. */}
       <MapView style={styles.map} mapStyle={MAP_STYLE_URL} attribution>
-        <Camera
-          ref={cameraRef}
-          zoom={15}
-          initialViewState={{ center: SINGAPORE_CENTER, zoom: 15 }}
-        />
+        <Camera ref={cameraRef} initialViewState={INITIAL_VIEW_STATE} />
         <UserLocation />
+
+        {/* Landmark beacons — mounted BEFORE the fog so the fog renders on top.
+            Beacons stay hidden under the cloud and only show through where a
+            cell has been visited (punched out), just like the basemap. */}
+        <BeaconLayer landmarks={LANDMARKS} />
 
         {/* Fog-of-war: one mask polygon covers the whole region; visited cells
             are punched out as holes, so the basemap shows through there. */}
         <GeoJSONSource id="fog-mask" data={fogFC}>
-          <Layer
-            id="fog-fill"
-            type="fill"
-            paint={{
-              "fill-color": colors.fogGradient[0],
-              "fill-opacity": 0.7,
-            }}
-          />
+          <Layer id="fog-fill" type="fill" paint={FOG_PAINT} />
         </GeoJSONSource>
       </MapView>
 

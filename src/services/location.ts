@@ -48,6 +48,23 @@ export async function getCurrentPosition(): Promise<Reading> {
 }
 
 /**
+ * Instant best-effort fix from the OS location cache. Never waits on a fresh
+ * GPS lock, so it returns in milliseconds (or `null` if the OS has nothing
+ * cached). Used to center the map immediately on launch while a real fix is
+ * still being acquired — avoids the "stuck on the default view" feeling.
+ */
+export async function getLastKnownPosition(): Promise<Reading | null> {
+  const pos = await Location.getLastKnownPositionAsync();
+  if (!pos) return null;
+  return {
+    lat: pos.coords.latitude,
+    lng: pos.coords.longitude,
+    accuracy: pos.coords.accuracy ?? 999,
+    timestamp: pos.timestamp,
+  };
+}
+
+/**
  * Subscribe to foreground position updates. Returns an async stop function.
  * Tuned for a balance of responsiveness and battery (NFR-1): ~3s / 10m.
  */
