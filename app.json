@@ -17,7 +17,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Fog uses your location while the app is open to color the map as you explore. Your map stays on your device."
-      }
+      },
+      "bundleIdentifier": "com.woody888.fog"
     },
     "android": {
       "adaptiveIcon": {
