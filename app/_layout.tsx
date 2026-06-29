@@ -1,3 +1,4 @@
+import '@/polyfills/textEncoding'; // must precede anything that imports h3-js
 import 'react-native-gesture-handler';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';

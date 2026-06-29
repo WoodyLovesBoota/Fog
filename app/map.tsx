@@ -7,6 +7,8 @@ import { colors, type } from '@/theme/tokens';
 import { MAP_STYLE_URL, SINGAPORE_CENTER } from '@/config/mapConfig';
 import { ensureSingaporePack, type DownloadState } from '@/map/downloadSingaporePack';
 import { requestPermission } from '@/services/location';
+import { ExplorationEngine } from '@/core/exploration/explorationEngine';
+import { PhoneLocationProvider } from '@/adapters/location/PhoneLocationProvider';
 
 /**
  * Real geographic map screen (Step 1): MapLibre + Stadia tiles, gated behind a
@@ -26,6 +28,19 @@ export default function MapScreen() {
     void requestPermission();
     startDownload();
   }, [startDownload]);
+
+  // Step 2: run the exploration engine and verify the flow in the console only.
+  // (No fog coloring / persistence yet — that's a later step.) The engine is
+  // pure + port-based, so the phone GPS is just one LocationProvider behind it.
+  useEffect(() => {
+    const engine = new ExplorationEngine(
+      new PhoneLocationProvider(),
+      (cellId) => console.log('✅ VISITED', cellId),
+      ({ cellId, accuracy }) => console.log('fix → cell', cellId, 'acc', Math.round(accuracy)),
+    );
+    engine.start().catch((e) => console.warn('engine start failed', e));
+    return () => engine.stop();
+  }, []);
 
   if (dl.status !== 'done') {
     return (
