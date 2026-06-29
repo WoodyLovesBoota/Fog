@@ -156,8 +156,12 @@ export const CATEGORY_META: Record<
 /**
  * Real Singapore attractions. Coordinates are approximate real-world values so
  * the beacons land in roughly the right spots. Keep `id`s stable.
+ *
+ * Full catalogue lives in `ALL_LANDMARKS`; the app currently surfaces only the
+ * first {@link LANDMARK_LIMIT} via {@link LANDMARKS}. Raise/remove the limit to
+ * bring the rest back — nothing else needs to change.
  */
-export const LANDMARKS: Landmark[] = [
+const ALL_LANDMARKS: Landmark[] = [
   {
     id: "marina-bay-sands",
     name: "Marina Bay Sands",
@@ -1459,3 +1463,9 @@ export const LANDMARKS: Landmark[] = [
     tip: "Wander Eng Hoon and Yong Siak Streets",
   },
 ];
+
+/** How many of `ALL_LANDMARKS` (from the top) the app actually surfaces. */
+export const LANDMARK_LIMIT = 20;
+
+/** The active landmark set: the first {@link LANDMARK_LIMIT} attractions. */
+export const LANDMARKS: Landmark[] = ALL_LANDMARKS.slice(0, LANDMARK_LIMIT);

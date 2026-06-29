@@ -89,6 +89,10 @@ export default function MapScreen() {
   const [trackingMode, setTrackingMode] = useState<"off" | "foreground" | "background">("off");
   const tracking = trackingMode !== "off";
   const [toast, setToast] = useState<string | null>(null);
+  // MapLibre drops camera commands until its style finishes loading, so the
+  // initial recenter must wait for this flag (flipped by onDidFinishLoadingMap)
+  // rather than firing the instant the download completes.
+  const [mapReady, setMapReady] = useState(false);
 
   // Tapped landmark + its live distance from the user (meters), for the sheet.
   const [selected, setSelected] = useState<Landmark | null>(null);
@@ -166,8 +170,10 @@ export default function MapScreen() {
     };
   }, [router, startDownload]);
 
-  // Once authorized: subscribe to live visit events, restore the fog from
-  // storage, then start tracking. The ingest pipeline reloads the visited set
+  // Once authorized: subscribe to live visit events and restore the fog from
+  // storage. We deliberately do NOT auto-start tracking here — the app launches
+  // in the "off" state and only begins exploring when the user taps "Start
+  // Exploring" (see toggleTracking). The ingest pipeline reloads the visited set
   // each batch, so already-cleared cells never re-fire — no seeding needed.
   // We deliberately do NOT stop the background task on unmount: continuing to
   // record while the screen is gone is the entire point of Step 5. Only the
@@ -179,18 +185,6 @@ export default function MapScreen() {
     (async () => {
       const saved = await repo.load();
       if (!cancelled) setVisitedCells(saved); // restore the fog
-      const result = await enableBackgroundTracking();
-      if (cancelled) return;
-      if (result === "denied") {
-        router.replace("/denied");
-        return;
-      }
-      if (result === "foreground-only") {
-        await startForegroundFallback();
-        if (!cancelled) setTrackingMode("foreground");
-      } else {
-        setTrackingMode("background");
-      }
     })();
     return () => {
       cancelled = true;
@@ -198,7 +192,7 @@ export default function MapScreen() {
       stopForegroundFallback();
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
-  }, [authorized, repo, router, handleVisited]);
+  }, [authorized, repo, handleVisited]);
 
   // Repaint from storage whenever the app returns to the foreground — this is
   // how cells cleared by the headless background task while we were away show up.
@@ -214,8 +208,13 @@ export default function MapScreen() {
   // the OS-cached fix instantly (so the map jumps off the Singapore default
   // immediately), then a fresh `getCurrentPosition` refines it. Only fires once
   // per mount, so the user can pan freely afterwards.
+  //
+  // We gate on `mapReady` (not just dl.status): MapLibre silently ignores
+  // jumpTo/flyTo until its style has loaded, so firing the moment the download
+  // finishes would no-op and leave the camera stuck on the Singapore default —
+  // the user would then have to tap the recenter FAB to move at all.
   useEffect(() => {
-    if (dl.status !== "done") return;
+    if (dl.status !== "done" || !mapReady) return;
     let cancelled = false;
     (async () => {
       const last = await getLastKnownPosition();
@@ -238,7 +237,7 @@ export default function MapScreen() {
     return () => {
       cancelled = true;
     };
-  }, [dl.status]);
+  }, [dl.status, mapReady]);
 
   // Bottom button: pause/resume tracking. Resume re-requests permission and
   // prefers the background task; pause stops whichever driver is live.
@@ -288,11 +287,16 @@ export default function MapScreen() {
   const selectedCollected =
     selected != null && visitedCells.includes(landmarkCell(selected));
 
-  // Recenter FAB: fly the camera back to the current position.
+  // Recenter FAB: snap to the last-known fix instantly (so the button always
+  // *does* something), then refine with a fresh fix.
   const recenter = useCallback(async () => {
+    const last = await getLastKnownPosition();
+    if (last) {
+      cameraRef.current?.jumpTo({ center: [last.lng, last.lat], zoom: 15 });
+    }
     try {
       const pos = await getCurrentPosition();
-      cameraRef.current?.flyTo({ center: [pos.lng, pos.lat], zoom: 15, duration: 600 });
+      cameraRef.current?.flyTo({ center: [pos.lng, pos.lat], zoom: 16, duration: 600 });
     } catch (e) {
       console.warn("recenter failed", e);
     }
@@ -337,7 +341,12 @@ export default function MapScreen() {
   return (
     <View style={styles.page}>
       {/* After download this renders from the offline cache. */}
-      <MapView style={styles.map} mapStyle={MAP_STYLE_URL} attribution>
+      <MapView
+        style={styles.map}
+        mapStyle={MAP_STYLE_URL}
+        attribution
+        onDidFinishLoadingMap={() => setMapReady(true)}
+      >
         <Camera ref={cameraRef} initialViewState={INITIAL_VIEW_STATE} />
         <UserLocation />
 

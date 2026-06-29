@@ -1,8 +1,6 @@
 import * as Location from 'expo-location';
 
 import {
-  BG_DISTANCE_M,
-  BG_DEFERRED_MS,
   LOCATION_TIME_INTERVAL_MS,
   LOCATION_DISTANCE_M,
 } from '@/config/explorationConfig';
@@ -19,6 +17,9 @@ import { BG_LOCATION_TASK } from '@/background/locationTask';
  *  - `foreground`  — fallback `watchPositionAsync` for when the user grants only
  *                    "When In Use". Tracks while the app is open; nothing in the
  *                    background. No OS task started, so it can't collide.
+ *
+ * Both drivers use HIGH accuracy + distanceInterval 0 so fixes keep arriving
+ * even while standing still (dwell needs that) and pass the accuracy filter.
  */
 export type TrackingResult = 'ok' | 'denied' | 'foreground-only';
 
@@ -26,10 +27,6 @@ let foregroundSub: Location.LocationSubscription | null = null;
 
 /**
  * Request permissions and start the background task if "Always" was granted.
- * Returns:
- *  - 'ok'             → background tracking is running
- *  - 'foreground-only'→ only "When In Use"; caller should start the fallback
- *  - 'denied'         → no location access at all
  */
 export async function enableBackgroundTracking(): Promise<TrackingResult> {
   const fg = await Location.requestForegroundPermissionsAsync();
@@ -43,9 +40,11 @@ export async function enableBackgroundTracking(): Promise<TrackingResult> {
   if (!already) {
     resetIngestAnchor();
     await Location.startLocationUpdatesAsync(BG_LOCATION_TASK, {
-      accuracy: Location.Accuracy.Balanced,
-      distanceInterval: BG_DISTANCE_M,
-      deferredUpdatesInterval: BG_DEFERRED_MS,
+      accuracy: Location.Accuracy.High,
+      // 0 → keep fixes coming even while still; non-zero starves dwell.
+      distanceInterval: LOCATION_DISTANCE_M,
+      // Android time cadence; iOS ignores this and uses distance only.
+      timeInterval: LOCATION_TIME_INTERVAL_MS,
       pausesUpdatesAutomatically: false,
       activityType: Location.ActivityType.Fitness,
       showsBackgroundLocationIndicator: true,
@@ -68,8 +67,8 @@ export async function disableBackgroundTracking(): Promise<void> {
 
 /**
  * Foreground-only fallback driver: a plain `watchPositionAsync` feeding the same
- * ingest pipeline. distanceInterval 0 + a short timeInterval so standing-still
- * dwell still works while the screen is open. Safe to call repeatedly.
+ * ingest pipeline. High accuracy + distanceInterval 0 so standing-still dwell
+ * works while the screen is open. Safe to call repeatedly.
  */
 export async function startForegroundFallback(): Promise<void> {
   if (foregroundSub) return;
