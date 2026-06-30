@@ -35,11 +35,3 @@ export async function saveDwellState(state: DwellState): Promise<void> {
     // Best-effort; a dropped write just loses a little dwell progress.
   }
 }
-
-export async function clearDwellState(): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(KEY);
-  } catch {
-    // ignore
-  }
-}

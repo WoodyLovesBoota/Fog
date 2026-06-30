@@ -47,13 +47,17 @@ export const MAX_DWELL_GAP_MS = 5 * 60 * 1000;
 export const BG_DISTANCE_M = 10;
 
 /**
- * Battery saver: the OS may batch background fixes and deliver them at most
- * this often, instead of waking the JS task on every single update.
- */
-export const BG_DEFERRED_MS = 10_000;
-
-/**
  * A jump larger than this between two accepted fixes is GPS noise / a teleport
  * after a long sleep, not real walking — so it's excluded from distance.
  */
 export const MAX_STEP_M = 100;
+
+// ---- Landmark discovery (Step 6) ------------------------------------------
+
+/**
+ * Radius (meters) within which a landmark is "discovered" (collected). This is
+ * deliberately tight — discovery is judged against the landmark's REAL
+ * coordinate, NOT the ~125m fog cell it sits in. Cell-based judging would fire
+ * from a block away; coordinate proximity makes you actually arrive.
+ */
+export const DISCOVERY_RADIUS_M = 50;

@@ -73,6 +73,14 @@ export type Landmark = {
   /** Display name (English). */
   name: string;
   category: LandmarkCategory;
+  /**
+   * Anchor landmarks (the 10 most iconic) are drawn on the map from the very
+   * first launch. The other 90 are HIDDEN — their pin (and coordinate) must
+   * never render until the user physically discovers them (see Step 6). This
+   * flag is the only thing that decides "drawn from the start" vs "hidden until
+   * found"; collection itself is identical for all 100.
+   */
+  isAnchor?: boolean;
   /** Geographic position. WGS84 degrees. */
   lat: number;
   lng: number;
@@ -157,15 +165,15 @@ export const CATEGORY_META: Record<
  * Real Singapore attractions. Coordinates are approximate real-world values so
  * the beacons land in roughly the right spots. Keep `id`s stable.
  *
- * Full catalogue lives in `ALL_LANDMARKS`; the app currently surfaces only the
- * first {@link LANDMARK_LIMIT} via {@link LANDMARKS}. Raise/remove the limit to
- * bring the rest back — nothing else needs to change.
+ * The full catalogue of 100 IS the game (Step 6): the {@link isAnchor} ten are
+ * drawn from launch, the other ninety stay hidden until discovered by proximity.
  */
-const ALL_LANDMARKS: Landmark[] = [
+export const ALL_LANDMARKS: Landmark[] = [
   {
     id: "marina-bay-sands",
     name: "Marina Bay Sands",
     category: "landmark",
+    isAnchor: true,
     lat: 1.2837575,
     lng: 103.8591065,
     emoji: "🏨",
@@ -179,6 +187,7 @@ const ALL_LANDMARKS: Landmark[] = [
     id: "gardens-by-the-bay",
     name: "Gardens by the Bay",
     category: "nature",
+    isAnchor: true,
     lat: 1.2815683,
     lng: 103.8636132,
     emoji: "🌳",
@@ -192,6 +201,7 @@ const ALL_LANDMARKS: Landmark[] = [
     id: "merlion-park",
     name: "Merlion Park",
     category: "landmark",
+    isAnchor: true,
     lat: 1.2867449,
     lng: 103.8543872,
     emoji: "🦁",
@@ -205,6 +215,7 @@ const ALL_LANDMARKS: Landmark[] = [
     id: "singapore-botanic-gardens",
     name: "Singapore Botanic Gardens",
     category: "nature",
+    isAnchor: true,
     lat: 1.3138397,
     lng: 103.8159136,
     emoji: "🌸",
@@ -218,6 +229,7 @@ const ALL_LANDMARKS: Landmark[] = [
     id: "universal-studios-singapore",
     name: "Universal Studios Singapore",
     category: "entertainment",
+    isAnchor: true,
     lat: 1.2540421,
     lng: 103.8238084,
     emoji: "🎢",
@@ -244,6 +256,7 @@ const ALL_LANDMARKS: Landmark[] = [
     id: "singapore-zoo",
     name: "Singapore Zoo",
     category: "nature",
+    isAnchor: true,
     lat: 1.4043485,
     lng: 103.793023,
     emoji: "🦒",
@@ -257,6 +270,7 @@ const ALL_LANDMARKS: Landmark[] = [
     id: "singapore-flyer",
     name: "Singapore Flyer",
     category: "entertainment",
+    isAnchor: true,
     lat: 1.2892988,
     lng: 103.8631368,
     emoji: "🎡",
@@ -270,6 +284,7 @@ const ALL_LANDMARKS: Landmark[] = [
     id: "chinatown",
     name: "Chinatown",
     category: "culture",
+    isAnchor: true,
     lat: 1.2814942,
     lng: 103.8448202,
     emoji: "🏮",
@@ -400,6 +415,7 @@ const ALL_LANDMARKS: Landmark[] = [
     id: "jewel-changi-airport",
     name: "Jewel Changi Airport",
     category: "landmark",
+    isAnchor: true,
     lat: 1.3602094,
     lng: 103.9897598,
     emoji: "💧",
@@ -491,6 +507,7 @@ const ALL_LANDMARKS: Landmark[] = [
     id: "orchard-road",
     name: "Orchard Road",
     category: "shopping",
+    isAnchor: true,
     lat: 1.3048205,
     lng: 103.8321984,
     emoji: "🛍️",
@@ -1464,8 +1481,15 @@ const ALL_LANDMARKS: Landmark[] = [
   },
 ];
 
-/** How many of `ALL_LANDMARKS` (from the top) the app actually surfaces. */
-export const LANDMARK_LIMIT = 20;
+/**
+ * The active landmark set — all 100. The discovery game spans the whole
+ * catalogue; what differs per landmark is only {@link isAnchor} (drawn from the
+ * start) vs hidden (revealed on discovery), never which ones are "in play".
+ */
+export const LANDMARKS: Landmark[] = ALL_LANDMARKS;
 
-/** The active landmark set: the first {@link LANDMARK_LIMIT} attractions. */
-export const LANDMARKS: Landmark[] = ALL_LANDMARKS.slice(0, LANDMARK_LIMIT);
+/** The ten iconic anchors — drawn on the map from the very first launch. */
+export const ANCHORS: Landmark[] = ALL_LANDMARKS.filter((l) => l.isAnchor);
+
+/** How many landmarks stay hidden until discovered (the 90). The counter's denominator. */
+export const TOTAL_HIDDEN = ALL_LANDMARKS.length - ANCHORS.length;

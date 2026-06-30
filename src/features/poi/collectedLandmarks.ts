@@ -38,14 +38,6 @@ export function annotateLandmarks(
   });
 }
 
-/** Just the collected landmarks, in input order. */
-export function selectCollected(
-  landmarks: Landmark[],
-  visitedCells: Iterable<string>,
-): LandmarkWithStatus[] {
-  return annotateLandmarks(landmarks, visitedCells).filter((l) => l.collected);
-}
-
 /** How many of the given landmarks have been collected. */
 export function countCollected(
   landmarks: Landmark[],

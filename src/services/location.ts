@@ -16,8 +16,6 @@ export type Reading = {
   timestamp: number;
 };
 
-export type ReadingListener = (reading: Reading) => void;
-
 function mapStatus(s: Location.PermissionStatus): PermissionStatus {
   if (s === Location.PermissionStatus.GRANTED) return 'granted';
   if (s === Location.PermissionStatus.DENIED) return 'denied';
@@ -62,27 +60,4 @@ export async function getLastKnownPosition(): Promise<Reading | null> {
     accuracy: pos.coords.accuracy ?? 999,
     timestamp: pos.timestamp,
   };
-}
-
-/**
- * Subscribe to foreground position updates. Returns an async stop function.
- * Tuned for a balance of responsiveness and battery (NFR-1): ~3s / 10m.
- */
-export async function watchPosition(onReading: ReadingListener): Promise<() => void> {
-  const sub = await Location.watchPositionAsync(
-    {
-      accuracy: Location.Accuracy.Balanced,
-      timeInterval: 3000,
-      distanceInterval: 10,
-    },
-    (pos) => {
-      onReading({
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        accuracy: pos.coords.accuracy ?? 999,
-        timestamp: pos.timestamp,
-      });
-    },
-  );
-  return () => sub.remove();
 }

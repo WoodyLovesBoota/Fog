@@ -7,10 +7,9 @@ import type { VisitedRepository } from '@/core/ports/VisitedRepository';
  * relaunch (FR-6), stored on-device only (NFR-5). MVP keeps this dead simple —
  * a JSON array of cell id strings under one key.
  *
- * Distinct from the prototype grid store in `services/storage.ts` (which is
- * keyed by numeric grid ids). This one owns the *geographic* H3 cell set used
- * by the real map. To move to MMKV later, implement the same interface with
- * `mmkv.getString/set` — no other file changes.
+ * This owns the *geographic* H3 cell set used by the real map. To move to MMKV
+ * later, implement the same interface with `mmkv.getString/set` — no other file
+ * changes.
  */
 const KEY = 'fog.visitedCells.h3.v1';
 

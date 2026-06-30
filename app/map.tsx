@@ -38,6 +38,7 @@ import { AsyncVisitedRepository } from "@/adapters/storage/VisitedRepository.asy
 import {
   enableBackgroundTracking,
   disableBackgroundTracking,
+  isBackgroundTrackingActive,
   startForegroundFallback,
   stopForegroundFallback,
 } from "@/adapters/location/backgroundTracking";
@@ -49,6 +50,7 @@ import { landmarkCell } from "@/features/poi/collectedLandmarks";
 import { LandmarkSheet } from "@/components/LandmarkSheet";
 import { CollectModal } from "@/components/CollectModal";
 import { Hexagon } from "@/components/Hexagon";
+import { LiveSignal } from "@/components/LiveSignal";
 import { BarsIcon, CrosshairIcon } from "@/components/icons";
 import { Toast } from "@/components/Toast";
 import { PrimaryButton } from "@/components/PrimaryButton";
@@ -67,7 +69,7 @@ const CLOUD_IMAGE_ID = "fog-cloud";
     still one feature, so the cloud cover costs nothing per unexplored cell. */
 const FOG_PAINT = {
   "fill-pattern": CLOUD_IMAGE_ID,
-  "fill-opacity": 0.9,
+  "fill-opacity": 0.7,
 } as const;
 const FOG_IMAGES = { [CLOUD_IMAGE_ID]: CLOUD_TILE } as const;
 
@@ -96,7 +98,9 @@ export default function MapScreen() {
   const [visitedCells, setVisitedCells] = useState<string[]>([]);
   // 'background' = OS task running (works while away); 'foreground' = fallback
   // watcher (app open only); 'off' = paused.
-  const [trackingMode, setTrackingMode] = useState<"off" | "foreground" | "background">("off");
+  const [trackingMode, setTrackingMode] = useState<
+    "off" | "foreground" | "background"
+  >("off");
   const tracking = trackingMode !== "off";
   const [toast, setToast] = useState<string | null>(null);
   // MapLibre drops camera commands until its style finishes loading, so the
@@ -106,7 +110,9 @@ export default function MapScreen() {
 
   // Tapped landmark + its live distance from the user (meters), for the sheet.
   const [selected, setSelected] = useState<Landmark | null>(null);
-  const [selectedDistanceM, setSelectedDistanceM] = useState<number | null>(null);
+  const [selectedDistanceM, setSelectedDistanceM] = useState<number | null>(
+    null
+  );
   // Landmark to celebrate in the "collected" modal (set when its cell uncovers).
   const [collectLandmark, setCollectLandmark] = useState<Landmark | null>(null);
 
@@ -125,10 +131,19 @@ export default function MapScreen() {
   const fogFC = useMemo(() => fogMask(visitedCells), [visitedCells]);
 
   // "N% of Singapore explored" — visited cells over the land-cell denominator.
-  const progressPct = Math.min(100, (visitedCells.length / TOTAL_LAND_CELLS) * 100);
+  const progressPct = Math.min(
+    100,
+    (visitedCells.length / TOTAL_LAND_CELLS) * 100
+  );
 
   const cameraRef = useRef<CameraRef>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Mirrors "is a tracking session active?" for the AppState listener, which must
+  // read it without re-subscribing on every toggle.
+  const trackingRef = useRef(false);
+  useEffect(() => {
+    trackingRef.current = trackingMode !== "off";
+  }, [trackingMode]);
 
   const flashToast = useCallback((message: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -141,7 +156,9 @@ export default function MapScreen() {
   // screen's only job is to paint the fog and celebrate the new area.
   const handleVisited = useCallback(
     (cellId: string) => {
-      setVisitedCells((prev) => (prev.includes(cellId) ? prev : [...prev, cellId]));
+      setVisitedCells((prev) =>
+        prev.includes(cellId) ? prev : [...prev, cellId]
+      );
       // If this newly-uncovered cell holds a landmark, celebrate it instead of
       // the generic toast (the modal already says "+1").
       const lm = landmarkByCell.get(cellId);
@@ -226,11 +243,37 @@ export default function MapScreen() {
     return () => sub.remove();
   }, [flashToast]);
 
-  // Repaint from storage whenever the app returns to the foreground — this is
-  // how cells cleared by the headless background task while we were away show up.
+  // A cold start always presents a clean "Start" state. `startLocationUpdatesAsync`
+  // persists at the OS level, so a task started in a previous session can outlive
+  // a full app kill and keep recording invisibly — which is why a fresh launch
+  // would otherwise read "Pause Exploring" (and the fog moved with no one tapping
+  // Start). Stop any such orphan so opening the app never means you're secretly
+  // already exploring: tracking only runs after an explicit Start in this session.
+  // (Backgrounding doesn't remount, so an in-progress session keeps recording —
+  // this only fires on a true cold start.)
+  useEffect(() => {
+    if (authorized !== true) return;
+    (async () => {
+      if (await isBackgroundTrackingActive()) await disableBackgroundTracking();
+    })();
+  }, [authorized]);
+
+  // Swap the *live driver* on each app-state change — but never touch the OS task,
+  // which stays running for the whole session (that's what keeps the FGS alive and
+  // its start out of the forbidden background path). On returning to the foreground
+  // we repaint the fog from storage (covers anything the OS task cleared while
+  // away) and re-attach the live watcher; on leaving we drop the watcher and hand
+  // the baton to the always-on OS task. The watcher flags itself the active driver
+  // so exactly one side ingests at a time — no double-count. Only while a session
+  // is active (trackingRef), so backgrounding with tracking off does nothing.
   useEffect(() => {
     const sub = AppState.addEventListener("change", (s) => {
-      if (s === "active") void repo.load().then(setVisitedCells);
+      if (s === "active") {
+        void repo.load().then(setVisitedCells);
+        if (trackingRef.current) void startForegroundFallback();
+      } else {
+        stopForegroundFallback();
+      }
     });
     return () => sub.remove();
   }, [repo]);
@@ -272,24 +315,29 @@ export default function MapScreen() {
   }, [dl.status, mapReady]);
 
   // Bottom button: pause/resume tracking. Resume re-requests permission and
-  // prefers the background task; pause stops whichever driver is live.
+  // prefers the always-on background task; pause stops whichever driver is live.
   const toggleTracking = useCallback(async () => {
     if (trackingMode === "off") {
+      // enableBackgroundTracking is our permission gateway; it returns 'ok' when
+      // "Always" is granted, 'foreground-only' for "While Using", 'denied' otherwise.
+      // On 'ok' it ALSO starts the foreground-service-backed OS task right here —
+      // while we're still in the foreground, where starting an FGS is allowed —
+      // and we leave it running across background/foreground for the whole
+      // session. 'foreground-only' can't run an OS task; the watcher is then its
+      // only driver (records only while the app is open).
       const result = await enableBackgroundTracking();
       if (result === "denied") {
         router.replace("/denied");
-      } else if (result === "foreground-only") {
-        await startForegroundFallback();
-        setTrackingMode("foreground");
-      } else {
-        setTrackingMode("background");
+        return;
       }
+      // We're in the foreground now → run the live watcher so the HUD/fog update
+      // as you walk with the app open. It marks itself the active driver, so the
+      // always-on OS task ('ok' mode) skips ingesting until we background.
+      await startForegroundFallback();
+      setTrackingMode(result === "ok" ? "background" : "foreground");
     } else {
-      if (trackingMode === "foreground") {
-        stopForegroundFallback();
-      } else {
-        await disableBackgroundTracking();
-      }
+      stopForegroundFallback();
+      await disableBackgroundTracking();
       setTrackingMode("off");
     }
   }, [trackingMode, router]);
@@ -327,11 +375,19 @@ export default function MapScreen() {
   const recenter = useCallback(async () => {
     const last = await getLastKnownPosition();
     if (last) {
-      cameraRef.current?.flyTo({ center: [last.lng, last.lat], zoom: 16, duration: 900 });
+      cameraRef.current?.flyTo({
+        center: [last.lng, last.lat],
+        zoom: 16,
+        duration: 900,
+      });
     }
     try {
       const pos = await getCurrentPosition();
-      cameraRef.current?.flyTo({ center: [pos.lng, pos.lat], zoom: 16, duration: 900 });
+      cameraRef.current?.flyTo({
+        center: [pos.lng, pos.lat],
+        zoom: 16,
+        duration: 900,
+      });
     } catch (e) {
       console.warn("recenter failed", e);
     }
@@ -345,30 +401,32 @@ export default function MapScreen() {
           { paddingTop: insets.top, paddingBottom: insets.bottom },
         ]}
       >
-        {dl.status === "error" ? (
-          <>
-            <Text style={styles.title}>Couldn't load the map</Text>
-            <Text style={styles.subtitle} numberOfLines={2}>
-              {dl.message}
-            </Text>
-            <Pressable
-              onPress={startDownload}
-              accessibilityRole="button"
-              accessibilityLabel="Download map again"
-              style={styles.retry}
-            >
-              <Text style={styles.retryLabel}>Retry</Text>
-            </Pressable>
-          </>
-        ) : dl.status === "downloading" ? (
-          <>
-            <ActivityIndicator color={colors.blueDeep} />
-            <Text style={styles.subtitle}>
-              Preparing Singapore map… {Math.round(dl.progress)}%
-            </Text>
-          </>
-        ) : null /* 'idle': cache check in flight — show a plain background, not
-                    a spinner, so returning users don't get a "preparing" flash. */}
+        {
+          dl.status === "error" ? (
+            <>
+              <Text style={styles.title}>Couldn't load the map</Text>
+              <Text style={styles.subtitle} numberOfLines={2}>
+                {dl.message}
+              </Text>
+              <Pressable
+                onPress={startDownload}
+                accessibilityRole="button"
+                accessibilityLabel="Download map again"
+                style={styles.retry}
+              >
+                <Text style={styles.retryLabel}>Retry</Text>
+              </Pressable>
+            </>
+          ) : dl.status === "downloading" ? (
+            <>
+              <ActivityIndicator color={colors.blueDeep} />
+              <Text style={styles.subtitle}>
+                Preparing Singapore map… {Math.round(dl.progress)}%
+              </Text>
+            </>
+          ) : null /* 'idle': cache check in flight — show a plain background, not
+                    a spinner, so returning users don't get a "preparing" flash. */
+        }
       </View>
     );
   }
@@ -412,7 +470,10 @@ export default function MapScreen() {
       </MapView>
 
       {/* Progress badge (top-left): hex meter + "% explored". */}
-      <View style={[styles.progressBadge, { top: insets.top + 12 }]} pointerEvents="none">
+      <View
+        style={[styles.progressBadge, { top: insets.top + 12 }]}
+        pointerEvents="none"
+      >
         <Hexagon
           size={27}
           ratio={30 / 27}
@@ -421,8 +482,14 @@ export default function MapScreen() {
           fill={colors.hexFill}
           track={colors.hexTrack}
         />
-        <Text style={styles.progressText}>{progressPct.toFixed(2)}% explored</Text>
+        <Text style={styles.progressText}>
+          {progressPct.toFixed(2)}% explored
+        </Text>
       </View>
+
+      {/* Live diagnostic signal (top-right): green = the location pipeline is
+          alive end-to-end. See LiveSignal for how to read it. */}
+      <LiveSignal style={{ top: insets.top + 12, right: 20 }} />
 
       {/* "New area uncovered" toast. */}
       <Toast message={toast} />
@@ -537,7 +604,13 @@ const styles = StyleSheet.create({
     ...shadows.card,
   },
   pillText: { fontFamily: fonts.display, fontSize: 15, color: colors.ink },
-  gridIcon: { width: 16, height: 16, flexDirection: "row", flexWrap: "wrap", gap: 3 },
+  gridIcon: {
+    width: 16,
+    height: 16,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 3,
+  },
   gridCell: { width: 6.5, height: 6.5, borderRadius: 2 },
   fab: {
     position: "absolute",

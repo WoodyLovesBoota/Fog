@@ -23,10 +23,23 @@ export interface FixEvent {
   timestamp: number;
 }
 
+/**
+ * Every fix the pipeline *receives*, emitted before the accuracy filter — so a
+ * live HUD can tell "GPS is alive but the fix was too noisy to count" apart from
+ * "no GPS at all". `accepted` mirrors the {@link MAX_ACCURACY_M} gate.
+ */
+export interface RawFixEvent {
+  accuracy: number;
+  accepted: boolean;
+  timestamp: number;
+}
+
 type FixListener = (e: FixEvent) => void;
+type RawFixListener = (e: RawFixEvent) => void;
 type VisitedListener = (cellId: string) => void;
 
 const fixListeners = new Set<FixListener>();
+const rawFixListeners = new Set<RawFixListener>();
 const visitedListeners = new Set<VisitedListener>();
 
 export const locationEvents = {
@@ -35,6 +48,11 @@ export const locationEvents = {
     fixListeners.add(fn);
     return () => fixListeners.delete(fn);
   },
+  /** Subscribe to every received fix, accepted or dropped (for the live HUD). */
+  onRawFix(fn: RawFixListener): () => void {
+    rawFixListeners.add(fn);
+    return () => rawFixListeners.delete(fn);
+  },
   /** Subscribe to cells the moment they cross the dwell threshold. */
   onVisited(fn: VisitedListener): () => void {
     visitedListeners.add(fn);
@@ -42,6 +60,9 @@ export const locationEvents = {
   },
   emitFix(e: FixEvent): void {
     fixListeners.forEach((fn) => fn(e));
+  },
+  emitRawFix(e: RawFixEvent): void {
+    rawFixListeners.forEach((fn) => fn(e));
   },
   emitVisited(cellId: string): void {
     visitedListeners.forEach((fn) => fn(cellId));

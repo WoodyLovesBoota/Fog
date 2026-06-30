@@ -63,11 +63,3 @@ export async function saveStats(stats: ExploreStatsData): Promise<void> {
     // Best-effort; stats are non-critical.
   }
 }
-
-export async function clearStats(): Promise<void> {
-  try {
-    await AsyncStorage.removeItem(KEY);
-  } catch {
-    // ignore
-  }
-}

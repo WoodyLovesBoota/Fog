@@ -49,6 +49,26 @@ let lastCoord: { lat: number; lng: number } | null = null;
  */
 let queue: Promise<void> = Promise.resolve();
 
+/**
+ * Which driver is feeding the pipeline right now. While the app is in the
+ * FOREGROUND a plain watchPositionAsync runs in this JS context and delivers
+ * fixes promptly (live HUD + live fog); the always-on OS task, meanwhile, keeps
+ * running for the background case but defers/withholds its batches while we're
+ * open. If BOTH fed ingest at once we'd double-count distance/dwell — so the
+ * foreground watcher sets this flag and the OS task skips ingesting while it's
+ * set. A headless relaunch (app killed) starts with it false, so the OS task is
+ * the sole driver there, exactly as intended.
+ */
+let foregroundDriverActive = false;
+
+export function setForegroundDriverActive(active: boolean): void {
+  foregroundDriverActive = active;
+}
+
+export function isForegroundDriverActive(): boolean {
+  return foregroundDriverActive;
+}
+
 export function ingestLocations(locations: IngestFix[]): Promise<void> {
   // The `.catch` MUST be part of the stored chain: a rejected `queue` would make
   // the next `.then(onFulfilled)` skip its callback entirely, silently dropping
@@ -76,7 +96,11 @@ async function ingestLocationsSerial(locations: IngestFix[]): Promise<void> {
 
   for (const loc of locations) {
     const acc = loc.coords.accuracy ?? 9999;
-    if (acc > MAX_ACCURACY_M) continue; // drop noisy fixes
+    // Surface the raw fix to any live HUD *before* filtering, so "GPS alive but
+    // too noisy" is visibly distinct from "no GPS at all".
+    const accepted = acc <= MAX_ACCURACY_M;
+    locationEvents.emitRawFix({ accuracy: acc, accepted, timestamp: loc.timestamp });
+    if (!accepted) continue; // drop noisy fixes
 
     const lat = loc.coords.latitude;
     const lng = loc.coords.longitude;

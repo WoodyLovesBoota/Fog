@@ -5,7 +5,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/components/Screen';
 import { LandmarkSheet } from '@/components/LandmarkSheet';
 import { LockIcon } from '@/components/icons';
-import { colors, fonts, radii, shadows, spacing } from '@/theme/tokens';
+import { colors, fonts, shadows, spacing } from '@/theme/tokens';
 import { AsyncVisitedRepository } from '@/adapters/storage/VisitedRepository.async';
 import { getCurrentPosition } from '@/services/location';
 import { haversineMeters } from '@/core/exploration/distance';

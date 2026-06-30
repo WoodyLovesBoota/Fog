@@ -1,20 +1,18 @@
 import { DWELL_THRESHOLD_MS, MAX_DWELL_GAP_MS } from '../../config/explorationConfig';
 
 /**
- * Serializable twin of {@link DwellTracker}.
+ * Serializable dwell accumulator for the background location pipeline.
  *
- * The foreground engine ({@link ExplorationEngine}) keeps its dwell accumulator
- * in memory because it lives as long as the map screen does. The background
- * location task can't: it runs in a short-lived, often headless JS context that
- * is spun up per batch and torn down again, with no shared memory between
+ * The background location task runs in a short-lived, often headless JS context
+ * that is spun up per batch and torn down again, with no shared memory between
  * invocations. So the entire dwell state has to be plain JSON that we load →
  * fold the new fixes in → save, every time the task fires.
  *
- * The jitter-defense trick is identical to {@link DwellTracker}: the elapsed
- * time since the previous fix is credited to the cell we were *in during that
- * interval* (`prevCell`), not the cell we just landed on. The one addition for
- * the background world is {@link MAX_DWELL_GAP_MS}: a gap longer than that is a
- * sleep, not dwell, and its time is discarded instead of dumped onto one cell.
+ * The jitter-defense trick: the elapsed time since the previous fix is credited
+ * to the cell we were *in during that interval* (`prevCell`), not the cell we
+ * just landed on. The one addition for the background world is
+ * {@link MAX_DWELL_GAP_MS}: a gap longer than that is a sleep, not dwell, and its
+ * time is discarded instead of dumped onto one cell.
  */
 export interface DwellState {
   /** cell id → accumulated dwell ms, for cells not yet visited. */
