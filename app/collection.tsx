@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
@@ -6,7 +6,7 @@ import { Screen } from '@/components/Screen';
 import { LandmarkSheet } from '@/components/LandmarkSheet';
 import { LockIcon } from '@/components/icons';
 import { colors, fonts, shadows, spacing } from '@/theme/tokens';
-import { AsyncVisitedRepository } from '@/adapters/storage/VisitedRepository.async';
+import { loadCollected } from '@/adapters/storage/collectedRepo';
 import { getCurrentPosition } from '@/services/location';
 import { haversineMeters } from '@/core/exploration/distance';
 import { CATEGORY_META, LANDMARKS, type Landmark } from '@/features/poi/landmarks';
@@ -15,13 +15,13 @@ import { annotateLandmarks, type LandmarkWithStatus } from '@/features/poi/colle
 /**
  * Collection screen (design handoff).
  *
- * Collected landmarks (their fog cell uncovered) show as full cards with a ✓;
- * the rest are locked "???" cards. Tapping a collected card opens the same
- * detail sheet the map uses, with the live distance resolved on open.
+ * Collected landmarks (discovered within range) show as full cards with a ✓; the
+ * rest are locked "???" cards. Tapping a collected card opens the same detail
+ * sheet the map uses, with the live distance resolved on open. Re-reads the
+ * collected set on focus so a discovery made on the map shows up here.
  */
 export default function CollectionScreen() {
   const router = useRouter();
-  const repo = useMemo(() => new AsyncVisitedRepository(), []);
   const [items, setItems] = useState<LandmarkWithStatus[]>([]);
   const [selected, setSelected] = useState<Landmark | null>(null);
   const [selectedDistanceM, setSelectedDistanceM] = useState<number | null>(null);
@@ -30,13 +30,13 @@ export default function CollectionScreen() {
     useCallback(() => {
       let active = true;
       (async () => {
-        const cells = await repo.load();
-        if (active) setItems(annotateLandmarks(LANDMARKS, cells));
+        const ids = await loadCollected();
+        if (active) setItems(annotateLandmarks(LANDMARKS, ids));
       })();
       return () => {
         active = false;
       };
-    }, [repo]),
+    }, []),
   );
 
   const openDetail = useCallback((lm: Landmark) => {

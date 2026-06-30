@@ -7,6 +7,7 @@ import { Hexagon, HexTile } from '@/components/Hexagon';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { colors, fonts, radii, shadows, spacing, type } from '@/theme/tokens';
 import { AsyncVisitedRepository } from '@/adapters/storage/VisitedRepository.async';
+import { loadCollected } from '@/adapters/storage/collectedRepo';
 import { loadStats } from '@/services/exploreStats';
 import { TOTAL_LAND_CELLS } from '@/data/singaporeLandCells';
 import { LANDMARKS } from '@/features/poi/landmarks';
@@ -30,13 +31,17 @@ export default function StatsScreen() {
     useCallback(() => {
       let active = true;
       (async () => {
-        const [cells, stats] = await Promise.all([repo.load(), loadStats()]);
+        const [cells, stats, collectedIds] = await Promise.all([
+          repo.load(),
+          loadStats(),
+          loadCollected(),
+        ]);
         if (active) {
           setData({
             areas: cells.length,
             distanceM: stats.distanceM,
             dayStreak: stats.dayStreak,
-            collected: countCollected(LANDMARKS, cells),
+            collected: countCollected(LANDMARKS, collectedIds),
           });
         }
       })();

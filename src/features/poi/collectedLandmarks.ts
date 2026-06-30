@@ -1,50 +1,43 @@
-import { fixToCell } from '@/core/exploration/h3';
 import { type Landmark } from '@/features/poi/landmarks';
 
 /**
- * Derives "which landmarks have I collected?" from the existing fog-of-war
- * progress — there is no separate collection store. A landmark counts as
- * COLLECTED once the H3 cell containing it has been uncovered (added to the
- * visited set in `AsyncVisitedRepository`).
+ * Derives "which landmarks have I collected?" from the persisted collected-id
+ * set (see `collectedRepo`). Collection is judged by coordinate proximity
+ * (Step 6), so the source of truth is a set of landmark ids — NOT the fog cells.
  *
- * Pure: no React, no storage, no map. The screen loads the visited cells and
- * runs them through here.
+ * Pure: no React, no storage, no map. Screens load the collected ids and run
+ * them through here.
  */
 
 export type LandmarkWithStatus = Landmark & {
-  /** H3 cell this landmark sits in (at the app's exploration resolution). */
-  cellId: string;
-  /** True once that cell has been uncovered. */
+  /** True once this landmark has been discovered (within range at least once). */
   collected: boolean;
 };
 
-/** The H3 cell a landmark falls in, at the configured exploration resolution. */
-export function landmarkCell(l: Landmark): string {
-  return fixToCell(l.lat, l.lng);
+/** Coerce an id iterable to a Set once, so repeated lookups are O(1). */
+function toSet(ids: Iterable<string>): Set<string> {
+  return ids instanceof Set ? ids : new Set(ids);
 }
 
 /**
- * Annotate every landmark with its cell + collected flag, given the set of
- * uncovered cells. Order is preserved from the input list.
+ * Annotate every landmark with its collected flag, given the set of collected
+ * ids. Order is preserved from the input list.
  */
 export function annotateLandmarks(
   landmarks: Landmark[],
-  visitedCells: Iterable<string>,
+  collectedIds: Iterable<string>,
 ): LandmarkWithStatus[] {
-  const visited = visitedCells instanceof Set ? visitedCells : new Set(visitedCells);
-  return landmarks.map((l) => {
-    const cellId = landmarkCell(l);
-    return { ...l, cellId, collected: visited.has(cellId) };
-  });
+  const collected = toSet(collectedIds);
+  return landmarks.map((l) => ({ ...l, collected: collected.has(l.id) }));
 }
 
 /** How many of the given landmarks have been collected. */
 export function countCollected(
   landmarks: Landmark[],
-  visitedCells: Iterable<string>,
+  collectedIds: Iterable<string>,
 ): number {
-  const visited = visitedCells instanceof Set ? visitedCells : new Set(visitedCells);
+  const collected = toSet(collectedIds);
   let n = 0;
-  for (const l of landmarks) if (visited.has(landmarkCell(l))) n += 1;
+  for (const l of landmarks) if (collected.has(l.id)) n += 1;
   return n;
 }

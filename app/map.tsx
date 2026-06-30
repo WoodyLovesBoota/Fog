@@ -46,9 +46,12 @@ import { locationEvents } from "@/core/exploration/locationEvents";
 import { TOTAL_LAND_CELLS } from "@/data/singaporeLandCells";
 import { LandmarkPin } from "@/features/map/LandmarkPin";
 import { LANDMARKS, type Landmark } from "@/features/poi/landmarks";
-import { landmarkCell } from "@/features/poi/collectedLandmarks";
+import { newlyDiscovered } from "@/features/poi/discovery";
+import { loadCollected, addCollected } from "@/adapters/storage/collectedRepo";
+import { DISCOVERY_RADIUS_M } from "@/config/explorationConfig";
 import { LandmarkSheet } from "@/components/LandmarkSheet";
 import { CollectModal } from "@/components/CollectModal";
+import { MultiDiscoverySheet } from "@/components/MultiDiscoverySheet";
 import { Hexagon } from "@/components/Hexagon";
 import { LiveSignal } from "@/components/LiveSignal";
 import { BarsIcon, CrosshairIcon } from "@/components/icons";
@@ -113,16 +116,22 @@ export default function MapScreen() {
   const [selectedDistanceM, setSelectedDistanceM] = useState<number | null>(
     null
   );
-  // Landmark to celebrate in the "collected" modal (set when its cell uncovers).
-  const [collectLandmark, setCollectLandmark] = useState<Landmark | null>(null);
 
-  // cell id → landmark, so a freshly-visited cell can fire the collected modal
-  // and the sheet can tell whether the selected landmark is collected.
-  const landmarkByCell = useMemo(() => {
-    const m = new Map<string, Landmark>();
-    for (const l of LANDMARKS) m.set(landmarkCell(l), l);
-    return m;
-  }, []);
+  // Collected landmark ids (proximity discovery, Step 6) + a ref mirror so the
+  // live-fix callback can read the latest set without re-subscribing. This is a
+  // separate axis from the visited-cell fog: a landmark is collected by getting
+  // within DISCOVERY_RADIUS_M of its coordinate, never by clearing its cell.
+  const [collected, setCollected] = useState<Set<string>>(new Set());
+  const collectedRef = useRef(collected);
+  useEffect(() => {
+    collectedRef.current = collected;
+  }, [collected]);
+
+  // The batch discovered together and still on screen (Step 6.1). Length decides
+  // the presentation: exactly one → the single celebration modal; two or more →
+  // the multi-discovery list sheet. A fix in a dense area lands several at once;
+  // a fix while the batch is still up merges in (deduped) instead of stacking.
+  const [discoveryBatch, setDiscoveryBatch] = useState<Landmark[]>([]);
 
   // One persistence adapter for the whole screen lifetime.
   const repo = useMemo(() => new AsyncVisitedRepository(), []);
@@ -134,6 +143,14 @@ export default function MapScreen() {
   const progressPct = Math.min(
     100,
     (visitedCells.length / TOTAL_LAND_CELLS) * 100
+  );
+
+  // Pins that may render: the 10 anchors (always) + any collected landmark. A
+  // hidden landmark's coordinate NEVER reaches the map until it's collected —
+  // that's the whole no-spoiler guarantee, so we filter here, not in the JSX.
+  const visiblePins = useMemo(
+    () => LANDMARKS.filter((l) => l.isAnchor || collected.has(l.id)),
+    [collected]
   );
 
   const cameraRef = useRef<CameraRef>(null);
@@ -153,23 +170,47 @@ export default function MapScreen() {
 
   // A cell crossed the dwell threshold (emitted live by the ingest pipeline).
   // Distance, day streak and persistence now all happen inside ingest, so the
-  // screen's only job is to paint the fog and celebrate the new area.
+  // screen's only job is to paint the fog and flash the "new area" toast.
+  // Landmark collection is a SEPARATE axis (proximity), handled by handleFix —
+  // the two fire independently off the same coordinate stream.
   const handleVisited = useCallback(
     (cellId: string) => {
       setVisitedCells((prev) =>
         prev.includes(cellId) ? prev : [...prev, cellId]
       );
-      // If this newly-uncovered cell holds a landmark, celebrate it instead of
-      // the generic toast (the modal already says "+1").
-      const lm = landmarkByCell.get(cellId);
-      if (lm) {
-        setCollectLandmark(lm);
-      } else {
-        flashToast("New area uncovered · +1 ✦");
-      }
+      flashToast("New area uncovered · +1 ✦");
     },
-    [flashToast, landmarkByCell]
+    [flashToast]
   );
+
+  // Every accepted fix is also tested for landmark proximity. Anything within
+  // DISCOVERY_RADIUS_M of its coordinate (and not already collected) is collected
+  // now: we update the set, persist it, and enqueue a discovery card. Reading the
+  // set from a ref (not state) keeps this callback stable, so we never resubscribe
+  // — and adding to the ref immediately means a still-queued discovery can't be
+  // re-enqueued by the next fix while its modal is open.
+  const handleFix = useCallback((lat: number, lng: number) => {
+    const found = newlyDiscovered(
+      { lat, lng },
+      LANDMARKS,
+      collectedRef.current,
+      DISCOVERY_RADIUS_M
+    );
+    if (found.length === 0) return;
+    const next = new Set(collectedRef.current);
+    found.forEach((l) => next.add(l.id));
+    collectedRef.current = next;
+    setCollected(next);
+    void addCollected(found.map((l) => l.id));
+    // Append to whatever batch is still on screen, skipping any already shown (a
+    // still-open batch can pick up more as the user keeps walking), so the same
+    // landmark never appears twice. collectedRef already blocks re-discovery, so
+    // this only guards duplicates within a single, uninterrupted batch.
+    setDiscoveryBatch((prev) => {
+      const shown = new Set(prev.map((l) => l.id));
+      return [...prev, ...found.filter((l) => !shown.has(l.id))];
+    });
+  }, []);
 
   const startDownload = useCallback(() => {
     void ensureSingaporePack(setDl);
@@ -208,18 +249,28 @@ export default function MapScreen() {
   useEffect(() => {
     if (authorized !== true) return;
     let cancelled = false;
-    const unsubscribe = locationEvents.onVisited(handleVisited);
+    const unsubscribeVisited = locationEvents.onVisited(handleVisited);
+    // Proximity discovery rides the same accepted-fix stream the fog uses.
+    const unsubscribeFix = locationEvents.onFix((e) => handleFix(e.lat, e.lng));
     (async () => {
-      const saved = await repo.load();
-      if (!cancelled) setVisitedCells(saved); // restore the fog
+      const [savedCells, savedCollected] = await Promise.all([
+        repo.load(),
+        loadCollected(),
+      ]);
+      if (cancelled) return;
+      setVisitedCells(savedCells); // restore the fog
+      const set = new Set(savedCollected);
+      collectedRef.current = set;
+      setCollected(set); // restore revealed/collected pins
     })();
     return () => {
       cancelled = true;
-      unsubscribe();
+      unsubscribeVisited();
+      unsubscribeFix();
       stopForegroundFallback();
       if (toastTimer.current) clearTimeout(toastTimer.current);
     };
-  }, [authorized, repo, handleVisited]);
+  }, [authorized, repo, handleVisited, handleFix]);
 
   // Android back button: the map is the app's home — backing out of it would
   // otherwise pop to the onboarding/permission screens still on the stack
@@ -357,15 +408,27 @@ export default function MapScreen() {
 
   const closeSheet = useCallback(() => setSelected(null), []);
 
-  // "View details" on the collected modal → close it, open that landmark's sheet.
-  const viewCollectedDetails = useCallback(() => {
-    if (collectLandmark) openLandmark(collectLandmark);
-    setCollectLandmark(null);
-  }, [collectLandmark, openLandmark]);
+  // A lone discovery drives the single celebration modal; two-or-more routes to
+  // the list sheet instead, so `singleDiscovery` is null whenever the sheet owns
+  // the batch — the two are mutually exclusive by length.
+  const singleDiscovery = discoveryBatch.length === 1 ? discoveryBatch[0] : null;
 
-  // Is the currently-selected landmark's cell already uncovered?
-  const selectedCollected =
-    selected != null && visitedCells.includes(landmarkCell(selected));
+  // Clearing the batch dismisses whichever surface is up; collection/pins/counter
+  // are already committed at discovery time, so this is a pure display dismiss.
+  const dismissDiscovery = useCallback(() => setDiscoveryBatch([]), []);
+
+  // Open a landmark's detail from a discovery surface, then dismiss the batch:
+  // the single modal's "View details", or a tapped row in the multi sheet.
+  const viewDiscoveryDetails = useCallback(
+    (lm: Landmark) => {
+      openLandmark(lm);
+      setDiscoveryBatch([]);
+    },
+    [openLandmark]
+  );
+
+  // Is the currently-selected landmark already collected?
+  const selectedCollected = selected != null && collected.has(selected.id);
 
   // Recenter FAB: glide the camera from wherever the user panned to onto their
   // location. We *fly* (animated) rather than jump — flying to the last-known
@@ -455,8 +518,10 @@ export default function MapScreen() {
 
         {/* Landmark beacons — native Markers sit ON TOP of the fog and stay
             visible everywhere, names included. Anchored at the pin head; tapping
-            one opens the detail sheet. */}
-        {LANDMARKS.map((lm) => (
+            one opens the detail sheet. Only the 10 anchors + already-collected
+            landmarks are drawn; the undiscovered 90 are intentionally absent so
+            their location can't be read off the map. */}
+        {visiblePins.map((lm) => (
           <Marker
             key={lm.id}
             id={lm.id}
@@ -487,8 +552,8 @@ export default function MapScreen() {
         </Text>
       </View>
 
-      {/* Live diagnostic signal (top-right): green = the location pipeline is
-          alive end-to-end. See LiveSignal for how to read it. */}
+      {/* Liveness dot (top-right): breathes green while location fixes are
+          arriving, rests muted when the pipeline is quiet. */}
       <LiveSignal style={{ top: insets.top + 12, right: 20 }} />
 
       {/* "New area uncovered" toast. */}
@@ -538,11 +603,20 @@ export default function MapScreen() {
         style={{ ...styles.walkBtn, bottom: insets.bottom + 20 }}
       />
 
-      {/* "New landmark collected" modal (fires when a landmark's cell uncovers). */}
+      {/* Single discovery → the celebration modal (null when the batch has 2+,
+          so it and the sheet below never show together). */}
       <CollectModal
-        landmark={collectLandmark}
-        onViewDetails={viewCollectedDetails}
-        onDismiss={() => setCollectLandmark(null)}
+        landmark={singleDiscovery}
+        onViewDetails={viewDiscoveryDetails}
+        onDismiss={dismissDiscovery}
+      />
+
+      {/* 2+ discovered at once → the scrollable list sheet (Step 6.1). Empty
+          items keeps it hidden; a tapped row opens that landmark's detail. */}
+      <MultiDiscoverySheet
+        items={discoveryBatch.length >= 2 ? discoveryBatch : []}
+        onSelect={viewDiscoveryDetails}
+        onClose={dismissDiscovery}
       />
 
       {/* Landmark detail bottom sheet (opens on beacon tap / "View details"). */}

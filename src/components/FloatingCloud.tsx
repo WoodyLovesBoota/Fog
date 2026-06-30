@@ -13,7 +13,7 @@ type Props = {
 };
 
 /**
- * Wraps a static cloud so it gently bobs up and down forever — the "둥실둥실"
+ * Wraps a static cloud so it gently bobs up and down forever — the drifting
  * float ported from the handoff prototype's `@keyframes float`/`floatB`
  * (translateY 0 → -Npx → 0, ease-in-out, infinite). Each cloud takes its own
  * amplitude/duration/delay so the group drifts out of phase like real clouds.

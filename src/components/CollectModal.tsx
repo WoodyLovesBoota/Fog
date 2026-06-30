@@ -5,11 +5,14 @@ import { colors, fonts, shadows } from '@/theme/tokens';
 import { CATEGORY_META, type Landmark } from '@/features/poi/landmarks';
 
 /**
- * "New landmark collected" celebration modal (design handoff).
+ * Single-landmark celebration modal (design handoff). Pops centered over a dim
+ * backdrop when exactly one landmark is collected — within
+ * {@link import('@/config/explorationConfig').DISCOVERY_RADIUS_M} of its
+ * coordinate. A batch of two or more routes to MultiDiscoverySheet instead, so
+ * this surface always shows just one.
  *
- * Pops (centered, over a dim backdrop) the first time the user uncovers the cell
- * a landmark sits in. "View details" jumps to its detail sheet; "Keep exploring"
- * just dismisses.
+ * Two variants share the layout: an ANCHOR (already on the map) reads as a
+ * "check-in", a HIDDEN landmark as a "new discovery".
  */
 export function CollectModal({
   landmark,
@@ -17,10 +20,11 @@ export function CollectModal({
   onDismiss,
 }: {
   landmark: Landmark | null;
-  onViewDetails: () => void;
+  onViewDetails: (landmark: Landmark) => void;
   onDismiss: () => void;
 }) {
   const meta = landmark ? CATEGORY_META[landmark.category] : null;
+  const isAnchor = landmark?.isAnchor ?? false;
 
   return (
     <Modal visible={landmark != null} transparent animationType="fade" onRequestClose={onDismiss} statusBarTranslucent>
@@ -46,7 +50,9 @@ export function CollectModal({
               </View>
             </View>
 
-            <Text style={[styles.kicker, { color: meta.color }]}>NEW LANDMARK COLLECTED</Text>
+            <Text style={[styles.kicker, { color: meta.color }]}>
+              {isAnchor ? '✓ CHECKED IN' : '✨ NEW LANDMARK DISCOVERED'}
+            </Text>
             <Text style={styles.name}>{landmark.name}</Text>
             <Text style={styles.sub}>
               {meta.label}
@@ -59,7 +65,7 @@ export function CollectModal({
             </View>
 
             <View style={styles.actions}>
-              <Pressable onPress={onViewDetails} accessibilityRole="button">
+              <Pressable onPress={() => onViewDetails(landmark)} accessibilityRole="button">
                 <LinearGradient colors={colors.primaryButton} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.primary}>
                   <Text style={styles.primaryText}>View details</Text>
                 </LinearGradient>

@@ -10,10 +10,11 @@ import { ingestLocations, resetIngestAnchor, setForegroundDriverActive } from '@
 import { BG_LOCATION_TASK } from '@/background/locationTask';
 
 /**
- * Android 13+ (API 33) hides the foreground-service notification — our "탐험 기록
- * 중" indicator — unless POST_NOTIFICATIONS is granted, and some OEMs reap the
- * service sooner without a visible notification. Ask once before starting the
- * task; a denial doesn't block tracking, it just means no visible indicator.
+ * Android 13+ (API 33) hides the foreground-service notification — our
+ * "Recording your exploration" indicator — unless POST_NOTIFICATIONS is granted,
+ * and some OEMs reap the service sooner without a visible notification. Ask once
+ * before starting the task; a denial doesn't block tracking, it just means no
+ * visible indicator.
  */
 async function ensureNotificationPermission(): Promise<void> {
   if (Platform.OS !== 'android' || Platform.Version < 33) return;
@@ -72,12 +73,12 @@ export async function enableBackgroundTracking(): Promise<TrackingResult> {
       activityType: Location.ActivityType.Fitness,
       showsBackgroundLocationIndicator: true,
       foregroundService: {
-        notificationTitle: '탐험 기록 중',
-        notificationBody: '지나간 곳을 지도에 기록하고 있어요',
+        notificationTitle: 'Recording your exploration',
+        notificationBody: 'Tracking the places you pass on your map.',
         // Stop the service (and clear its notification) when the app is swiped
         // from recents. onTaskRemoved only fires on a true kill, NOT on lock /
         // app-switch — so backgrounding keeps recording, but fully closing the
-        // app removes the "탐험 기록 중" notification and ends tracking.
+        // app removes the "Recording your exploration" notification and ends tracking.
         killServiceOnDestroy: true,
       },
     });
