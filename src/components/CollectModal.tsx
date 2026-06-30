@@ -1,4 +1,4 @@
-import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, fonts, shadows } from '@/theme/tokens';
@@ -37,18 +37,22 @@ export function CollectModal({
             <View style={[styles.sparkle, { right: 38, top: 42, backgroundColor: '#88A5F4' }]} />
             <View style={[styles.sparkleDot, { right: 60, top: 16 }]} />
 
-            {/* Medal: tinted disc with the pin in the middle. */}
-            <View style={styles.medal}>
-              <LinearGradient
-                colors={[colors.white, meta.tintB, meta.tintA]}
-                start={{ x: 0.35, y: 0.3 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.medalDisc}
-              />
-              <View style={[styles.pin, { backgroundColor: meta.color }]}>
-                <View style={styles.pinDot} />
+            {/* Hero: the landmark photo if we have one; else the tinted medal. */}
+            {landmark.image ? (
+              <Image source={landmark.image} style={styles.photo} resizeMode="cover" />
+            ) : (
+              <View style={styles.medal}>
+                <LinearGradient
+                  colors={[colors.white, meta.tintB, meta.tintA]}
+                  start={{ x: 0.35, y: 0.3 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.medalDisc}
+                />
+                <View style={[styles.pin, { backgroundColor: meta.color }]}>
+                  <View style={styles.pinDot} />
+                </View>
               </View>
-            </View>
+            )}
 
             <Text style={[styles.kicker, { color: meta.color }]}>
               {isAnchor ? '✓ CHECKED IN' : '✨ NEW LANDMARK DISCOVERED'}
@@ -103,6 +107,20 @@ const styles = StyleSheet.create({
   sparkle: { position: 'absolute', width: 8, height: 8, borderRadius: 2, opacity: 0.9 },
   sparkleDot: { position: 'absolute', width: 7, height: 7, borderRadius: 4, backgroundColor: '#5FC39C' },
 
+  photo: {
+    width: 116,
+    height: 116,
+    marginTop: 4,
+    borderRadius: 58,
+    borderWidth: 4,
+    borderColor: colors.white,
+    backgroundColor: '#EFEEF6',
+    shadowColor: '#28285A',
+    shadowOpacity: 0.22,
+    shadowRadius: 22,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 8,
+  },
   medal: { width: 104, height: 104, marginTop: 4, alignItems: 'center', justifyContent: 'center' },
   medalDisc: {
     position: 'absolute',

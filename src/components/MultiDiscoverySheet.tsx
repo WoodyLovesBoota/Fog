@@ -4,6 +4,7 @@ import {
   Dimensions,
   Easing,
   FlatList,
+  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -118,9 +119,13 @@ function Row({ landmark, onPress }: { landmark: Landmark; onPress: () => void })
   const meta = CATEGORY_META[landmark.category];
   return (
     <Pressable style={styles.row} onPress={onPress} accessibilityRole="button">
-      <View style={[styles.thumb, { backgroundColor: meta.tintA }]}>
-        <Text style={styles.thumbEmoji}>{beaconEmoji(landmark)}</Text>
-      </View>
+      {landmark.image ? (
+        <Image source={landmark.image} style={styles.thumb} resizeMode="cover" />
+      ) : (
+        <View style={[styles.thumb, { backgroundColor: meta.tintA }]}>
+          <Text style={styles.thumbEmoji}>{beaconEmoji(landmark)}</Text>
+        </View>
+      )}
       <View style={styles.rowText}>
         <View style={styles.rowTop}>
           <Text style={styles.name} numberOfLines={1}>
@@ -170,7 +175,15 @@ const styles = StyleSheet.create({
   sep: { height: 1, backgroundColor: '#F0EFF8' },
 
   row: { flexDirection: 'row', alignItems: 'center', gap: 13, paddingVertical: 12 },
-  thumb: { width: 54, height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  thumb: {
+    width: 54,
+    height: 54,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    backgroundColor: '#EFEEF6',
+  },
   thumbEmoji: { fontSize: 26 },
   rowText: { flex: 1, gap: 4 },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: 8 },

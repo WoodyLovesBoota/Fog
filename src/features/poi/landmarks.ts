@@ -171,6 +171,7 @@ export const CATEGORY_META: Record<
 export const ALL_LANDMARKS: Landmark[] = [
   {
     id: "marina-bay-sands",
+    image: require("../../../assets/landmarks/marina-bay-sands.webp"),
     name: "Marina Bay Sands",
     category: "landmark",
     isAnchor: true,
@@ -185,6 +186,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "gardens-by-the-bay",
+    image: require("../../../assets/landmarks/gardens-by-the-bay.webp"),
     name: "Gardens by the Bay",
     category: "nature",
     lat: 1.2815683,
@@ -198,6 +200,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "merlion-park",
+    image: require("../../../assets/landmarks/merlion-park.webp"),
     name: "Merlion Park",
     category: "landmark",
     lat: 1.2867449,
@@ -211,6 +214,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "singapore-botanic-gardens",
+    image: require("../../../assets/landmarks/singapore-botanic-gardens.webp"),
     name: "Singapore Botanic Gardens",
     category: "nature",
     isAnchor: true,
@@ -225,6 +229,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "universal-studios-singapore",
+    image: require("../../../assets/landmarks/universal-studios-singapore.webp"),
     name: "Universal Studios Singapore",
     category: "entertainment",
     isAnchor: true,
@@ -239,6 +244,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "sentosa-island",
+    image: require("../../../assets/landmarks/sentosa-island.webp"),
     name: "Sentosa Island",
     category: "entertainment",
     lat: 1.2494041,
@@ -252,6 +258,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "singapore-zoo",
+    image: require("../../../assets/landmarks/singapore-zoo.webp"),
     name: "Singapore Zoo",
     category: "nature",
     isAnchor: true,
@@ -266,6 +273,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "singapore-flyer",
+    image: require("../../../assets/landmarks/singapore-flyer.webp"),
     name: "Singapore Flyer",
     category: "entertainment",
     lat: 1.2892988,
@@ -279,6 +287,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "chinatown",
+    image: require("../../../assets/landmarks/chinatown.webp"),
     name: "Chinatown",
     category: "culture",
     lat: 1.2814942,
@@ -292,6 +301,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "little-india",
+    image: require("../../../assets/landmarks/little-india.webp"),
     name: "Little India",
     category: "culture",
     isAnchor: true,
@@ -306,6 +316,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "clarke-quay",
+    image: require("../../../assets/landmarks/clarke-quay.webp"),
     name: "Clarke Quay",
     category: "entertainment",
     lat: 1.2906024,
@@ -319,6 +330,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "night-safari",
+    image: require("../../../assets/landmarks/night-safari.webp"),
     name: "Night Safari",
     category: "nature",
     lat: 1.4021872,
@@ -332,6 +344,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "river-wonders",
+    image: require("../../../assets/landmarks/river-wonders.webp"),
     name: "River Wonders",
     category: "nature",
     lat: 1.4038498,
@@ -345,6 +358,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "bird-paradise",
+    image: require("../../../assets/landmarks/bird-paradise.webp"),
     name: "Bird Paradise",
     category: "nature",
     lat: 1.4071539,
@@ -358,6 +372,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "artscience-museum",
+    image: require("../../../assets/landmarks/artscience-museum.webp"),
     name: "ArtScience Museum",
     category: "culture",
     lat: 1.2862738,
@@ -371,6 +386,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "esplanade",
+    image: require("../../../assets/landmarks/esplanade.webp"),
     name: "Esplanade – Theatres on the Bay",
     category: "culture",
     lat: 1.2897934,
@@ -384,6 +400,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "national-gallery-singapore",
+    image: require("../../../assets/landmarks/national-gallery-singapore.webp"),
     name: "National Gallery Singapore",
     category: "culture",
     lat: 1.2902217,
@@ -397,6 +414,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "national-museum-singapore",
+    image: require("../../../assets/landmarks/national-museum-singapore.webp"),
     name: "National Museum of Singapore",
     category: "culture",
     lat: 1.296613,
@@ -410,6 +428,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "jewel-changi-airport",
+    image: require("../../../assets/landmarks/jewel-changi-airport.webp"),
     name: "Jewel Changi Airport",
     category: "landmark",
     isAnchor: true,
@@ -424,6 +443,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "buddha-tooth-relic-temple",
+    image: require("../../../assets/landmarks/buddha-tooth-relic-temple.webp"),
     name: "Buddha Tooth Relic Temple",
     category: "religious",
     lat: 1.2815155,
@@ -437,6 +457,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "sri-mariamman-temple",
+    image: require("../../../assets/landmarks/sri-mariamman-temple.webp"),
     name: "Sri Mariamman Temple",
     category: "religious",
     lat: 1.2829761,
@@ -450,6 +471,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "sultan-mosque",
+    image: require("../../../assets/landmarks/sultan-mosque.webp"),
     name: "Sultan Mosque",
     category: "religious",
     lat: 1.3022854,
@@ -463,6 +485,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "haji-lane",
+    image: require("../../../assets/landmarks/haji-lane.webp"),
     name: "Haji Lane",
     category: "shopping",
     lat: 1.3007065,
@@ -476,6 +499,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "malay-heritage-centre",
+    image: require("../../../assets/landmarks/malay-heritage-centre.webp"),
     name: "Malay Heritage Centre",
     category: "culture",
     lat: 1.3027993,
@@ -489,6 +513,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "raffles-hotel",
+    image: require("../../../assets/landmarks/raffles-hotel.webp"),
     name: "Raffles Hotel",
     category: "landmark",
     lat: 1.294889,
@@ -502,6 +527,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "orchard-road",
+    image: require("../../../assets/landmarks/orchard-road.webp"),
     name: "Orchard Road",
     category: "shopping",
     isAnchor: true,
@@ -516,6 +542,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "ion-orchard",
+    image: require("../../../assets/landmarks/ion-orchard.webp"),
     name: "ION Orchard",
     category: "shopping",
     lat: 1.3039557,
@@ -529,6 +556,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "fort-canning-park",
+    image: require("../../../assets/landmarks/fort-canning-park.webp"),
     name: "Fort Canning Park",
     category: "nature",
     lat: 1.2943876,
@@ -542,6 +570,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "marina-barrage",
+    image: require("../../../assets/landmarks/marina-barrage.webp"),
     name: "Marina Barrage",
     category: "nature",
     lat: 1.2805168,
@@ -555,6 +584,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "singapore-oceanarium",
+    image: require("../../../assets/landmarks/singapore-oceanarium.webp"),
     name: "Singapore Oceanarium",
     category: "entertainment",
     lat: 1.2583209,
@@ -568,6 +598,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "thian-hock-keng-temple",
+    image: require("../../../assets/landmarks/thian-hock-keng-temple.webp"),
     name: "Thian Hock Keng Temple",
     category: "religious",
     lat: 1.280939,
@@ -581,6 +612,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "lau-pa-sat",
+    image: require("../../../assets/landmarks/lau-pa-sat.webp"),
     name: "Lau Pa Sat",
     category: "food",
     lat: 1.2805121,
@@ -594,6 +626,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "maxwell-food-centre",
+    image: require("../../../assets/landmarks/maxwell-food-centre.webp"),
     name: "Maxwell Food Centre",
     category: "food",
     lat: 1.2803361,
@@ -607,6 +640,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "newton-food-centre",
+    image: require("../../../assets/landmarks/newton-food-centre.webp"),
     name: "Newton Food Centre",
     category: "food",
     lat: 1.3119888,
@@ -620,6 +654,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "singapore-cable-car",
+    image: require("../../../assets/landmarks/singapore-cable-car.webp"),
     name: "Singapore Cable Car",
     category: "entertainment",
     lat: 1.2711448,
@@ -633,6 +668,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "henderson-waves",
+    image: require("../../../assets/landmarks/henderson-waves.webp"),
     name: "Henderson Waves",
     category: "nature",
     lat: 1.275866,
@@ -646,6 +682,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "mount-faber-park",
+    image: require("../../../assets/landmarks/mount-faber-park.webp"),
     name: "Mount Faber Park",
     category: "nature",
     lat: 1.2718742,
@@ -659,6 +696,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "helix-bridge",
+    image: require("../../../assets/landmarks/helix-bridge.webp"),
     name: "Helix Bridge",
     category: "landmark",
     lat: 1.2874774,
@@ -672,6 +710,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "haw-par-villa",
+    image: require("../../../assets/landmarks/haw-par-villa.webp"),
     name: "Haw Par Villa",
     category: "culture",
     lat: 1.2841526,
@@ -685,6 +724,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "east-coast-park",
+    image: require("../../../assets/landmarks/east-coast-park.webp"),
     name: "East Coast Park",
     category: "nature",
     isAnchor: true,
@@ -699,6 +739,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "asian-civilisations-museum",
+    image: require("../../../assets/landmarks/asian-civilisations-museum.webp"),
     name: "Asian Civilisations Museum",
     category: "culture",
     lat: 1.2875002,
@@ -712,6 +753,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "peranakan-museum",
+    image: require("../../../assets/landmarks/peranakan-museum.webp"),
     name: "Peranakan Museum",
     category: "culture",
     lat: 1.2943669,
@@ -725,6 +767,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "boat-quay",
+    image: require("../../../assets/landmarks/boat-quay.webp"),
     name: "Boat Quay",
     category: "entertainment",
     lat: 1.2859916,
@@ -738,6 +781,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "tekka-centre",
+    image: require("../../../assets/landmarks/tekka-centre.webp"),
     name: "Tekka Centre",
     category: "food",
     lat: 1.3063839,
@@ -751,6 +795,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "tiong-bahru-market",
+    image: require("../../../assets/landmarks/tiong-bahru-market.webp"),
     name: "Tiong Bahru Market",
     category: "food",
     lat: 1.2850771,
@@ -764,6 +809,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "chinatown-complex-food-centre",
+    image: require("../../../assets/landmarks/chinatown-complex-food-centre.webp"),
     name: "Chinatown Complex Food Centre",
     category: "food",
     lat: 1.2825735,
@@ -777,6 +823,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "old-airport-road-food-centre",
+    image: require("../../../assets/landmarks/old-airport-road-food-centre.webp"),
     name: "Old Airport Road Food Centre",
     category: "food",
     lat: 1.3082405,
@@ -790,6 +837,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "macritchie-reservoir",
+    image: require("../../../assets/landmarks/macritchie-reservoir.webp"),
     name: "MacRitchie Reservoir",
     category: "nature",
     lat: 1.3447621,
@@ -803,6 +851,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "bukit-timah-nature-reserve",
+    image: require("../../../assets/landmarks/bukit-timah-nature-reserve.webp"),
     name: "Bukit Timah Nature Reserve",
     category: "nature",
     lat: 1.3483883,
@@ -816,6 +865,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "pulau-ubin",
+    image: require("../../../assets/landmarks/pulau-ubin.webp"),
     name: "Pulau Ubin",
     category: "nature",
     lat: 1.4125659,
@@ -829,6 +879,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "sri-veeramakaliamman-temple",
+    image: require("../../../assets/landmarks/sri-veeramakaliamman-temple.webp"),
     name: "Sri Veeramakaliamman Temple",
     category: "religious",
     lat: 1.3078878,
@@ -842,6 +893,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "masjid-jamae",
+    image: require("../../../assets/landmarks/masjid-jamae.webp"),
     name: "Masjid Jamae (Chulia)",
     category: "religious",
     lat: 1.2832261,
@@ -855,6 +907,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "kong-meng-san",
+    image: require("../../../assets/landmarks/kong-meng-san.webp"),
     name: "Kong Meng San Phor Kark See Monastery",
     category: "religious",
     lat: 1.3615175,
@@ -868,6 +921,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "chijmes",
+    image: require("../../../assets/landmarks/chijmes.webp"),
     name: "CHIJMES",
     category: "culture",
     lat: 1.2952923,
@@ -881,6 +935,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "st-andrews-cathedral",
+    image: require("../../../assets/landmarks/st-andrews-cathedral.webp"),
     name: "St Andrew's Cathedral",
     category: "religious",
     lat: 1.2923914,
@@ -894,6 +949,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "science-centre-singapore",
+    image: require("../../../assets/landmarks/science-centre-singapore.webp"),
     name: "Science Centre Singapore",
     category: "entertainment",
     lat: 1.3331687,
@@ -907,6 +963,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "jurong-lake-gardens",
+    image: require("../../../assets/landmarks/jurong-lake-gardens.webp"),
     name: "Jurong Lake Gardens",
     category: "nature",
     isAnchor: true,
@@ -921,6 +978,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "chinese-garden",
+    image: require("../../../assets/landmarks/chinese-garden.webp"),
     name: "Chinese Garden",
     category: "nature",
     lat: 1.3385396,
@@ -934,6 +992,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "sungei-buloh-wetland-reserve",
+    image: require("../../../assets/landmarks/sungei-buloh-wetland-reserve.webp"),
     name: "Sungei Buloh Wetland Reserve",
     category: "nature",
     lat: 1.4464304,
@@ -947,6 +1006,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "labrador-nature-reserve",
+    image: require("../../../assets/landmarks/labrador-nature-reserve.webp"),
     name: "Labrador Nature Reserve",
     category: "nature",
     lat: 1.2665094,
@@ -960,6 +1020,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "vivocity",
+    image: require("../../../assets/landmarks/vivocity.webp"),
     name: "VivoCity",
     category: "shopping",
     lat: 1.2647139,
@@ -973,6 +1034,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "bugis-street",
+    image: require("../../../assets/landmarks/bugis-street.webp"),
     name: "Bugis Street",
     category: "shopping",
     lat: 1.3001991,
@@ -986,6 +1048,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "mustafa-centre",
+    image: require("../../../assets/landmarks/mustafa-centre.webp"),
     name: "Mustafa Centre",
     category: "shopping",
     lat: 1.3099676,
@@ -999,6 +1062,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "fountain-of-wealth",
+    image: require("../../../assets/landmarks/fountain-of-wealth.webp"),
     name: "Fountain of Wealth",
     category: "landmark",
     lat: 1.2947425,
@@ -1012,6 +1076,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "the-shoppes-mbs",
+    image: require("../../../assets/landmarks/the-shoppes-mbs.webp"),
     name: "The Shoppes at Marina Bay Sands",
     category: "shopping",
     lat: 1.2836889,
@@ -1025,6 +1090,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "singapore-city-gallery",
+    image: require("../../../assets/landmarks/singapore-city-gallery.webp"),
     name: "Singapore City Gallery",
     category: "culture",
     lat: 1.2798527,
@@ -1038,6 +1104,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "fort-siloso",
+    image: require("../../../assets/landmarks/fort-siloso.webp"),
     name: "Fort Siloso",
     category: "culture",
     lat: 1.259363,
@@ -1051,6 +1118,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "skyline-luge-sentosa",
+    image: require("../../../assets/landmarks/skyline-luge-sentosa.webp"),
     name: "Skyline Luge Sentosa",
     category: "entertainment",
     lat: 1.2549696,
@@ -1064,6 +1132,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "adventure-cove-waterpark",
+    image: require("../../../assets/landmarks/adventure-cove-waterpark.webp"),
     name: "Adventure Cove Waterpark",
     category: "entertainment",
     lat: 1.2587643,
@@ -1077,6 +1146,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "siloso-beach",
+    image: require("../../../assets/landmarks/siloso-beach.webp"),
     name: "Siloso Beach",
     category: "nature",
     lat: 1.2554915,
@@ -1090,6 +1160,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "robertson-quay",
+    image: require("../../../assets/landmarks/robertson-quay.webp"),
     name: "Robertson Quay",
     category: "entertainment",
     lat: 1.2910567,
@@ -1103,6 +1174,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "sri-srinivasa-perumal-temple",
+    image: require("../../../assets/landmarks/sri-srinivasa-perumal-temple.webp"),
     name: "Sri Srinivasa Perumal Temple",
     category: "religious",
     lat: 1.3132706,
@@ -1116,6 +1188,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "temple-of-1000-lights",
+    image: require("../../../assets/landmarks/temple-of-1000-lights.webp"),
     name: "Temple of 1000 Lights",
     category: "religious",
     lat: 1.3147222,
@@ -1129,6 +1202,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "singapore-art-museum",
+    image: require("../../../assets/landmarks/singapore-art-museum.webp"),
     name: "Singapore Art Museum",
     category: "culture",
     lat: 1.2719533,
@@ -1142,6 +1216,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "gillman-barracks",
+    image: require("../../../assets/landmarks/gillman-barracks.webp"),
     name: "Gillman Barracks",
     category: "culture",
     lat: 1.2783333,
@@ -1155,6 +1230,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "coney-island",
+    image: require("../../../assets/landmarks/coney-island.webp"),
     name: "Coney Island Park",
     category: "nature",
     isAnchor: true,
@@ -1169,6 +1245,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "changi-beach-park",
+    image: require("../../../assets/landmarks/changi-beach-park.webp"),
     name: "Changi Beach Park",
     category: "nature",
     lat: 1.3912863,
@@ -1182,6 +1259,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "pasir-ris-park",
+    image: require("../../../assets/landmarks/pasir-ris-park.webp"),
     name: "Pasir Ris Park",
     category: "nature",
     lat: 1.3720588,
@@ -1195,6 +1273,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "bishan-ang-mo-kio-park",
+    image: require("../../../assets/landmarks/bishan-ang-mo-kio-park.webp"),
     name: "Bishan-Ang Mo Kio Park",
     category: "nature",
     lat: 1.3634088,
@@ -1208,6 +1287,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "national-stadium",
+    image: require("../../../assets/landmarks/national-stadium.webp"),
     name: "National Stadium",
     category: "entertainment",
     lat: 1.3044376,
@@ -1221,6 +1301,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "palawan-beach",
+    image: require("../../../assets/landmarks/palawan-beach.webp"),
     name: "Palawan Beach",
     category: "nature",
     lat: 1.2482777,
@@ -1234,6 +1315,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "skypark-observation-deck",
+    image: require("../../../assets/landmarks/skypark-observation-deck.webp"),
     name: "SkyPark Observation Deck",
     category: "landmark",
     lat: 1.2852044,
@@ -1247,6 +1329,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "cavenagh-bridge",
+    image: require("../../../assets/landmarks/cavenagh-bridge.webp"),
     name: "Cavenagh Bridge",
     category: "landmark",
     lat: 1.2865459,
@@ -1260,6 +1343,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "parliament-house",
+    image: require("../../../assets/landmarks/parliament-house.webp"),
     name: "Parliament House",
     category: "landmark",
     lat: 1.2891543,
@@ -1273,6 +1357,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "the-istana",
+    image: require("../../../assets/landmarks/the-istana.webp"),
     name: "The Istana",
     category: "landmark",
     lat: 1.3067039,
@@ -1286,6 +1371,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "dempsey-hill",
+    image: require("../../../assets/landmarks/dempsey-hill.webp"),
     name: "Dempsey Hill",
     category: "food",
     lat: 1.3039916,
@@ -1299,6 +1385,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "holland-village",
+    image: require("../../../assets/landmarks/holland-village.webp"),
     name: "Holland Village",
     category: "food",
     lat: 1.310912,
@@ -1312,6 +1399,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "peranakan-houses-joo-chiat",
+    image: require("../../../assets/landmarks/peranakan-houses-joo-chiat.webp"),
     name: "Koon Seng Road Peranakan Houses",
     category: "culture",
     lat: 1.3103748,
@@ -1325,6 +1413,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "geylang-serai-market",
+    image: require("../../../assets/landmarks/geylang-serai-market.webp"),
     name: "Geylang Serai Market",
     category: "food",
     lat: 1.3167284,
@@ -1338,6 +1427,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "wild-wild-wet",
+    image: require("../../../assets/landmarks/wild-wild-wet.webp"),
     name: "Wild Wild Wet",
     category: "entertainment",
     lat: 1.3775946,
@@ -1351,6 +1441,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "tanjong-beach",
+    image: require("../../../assets/landmarks/tanjong-beach.webp"),
     name: "Tanjong Beach",
     category: "nature",
     lat: 1.241666,
@@ -1364,6 +1455,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "armenian-church",
+    image: require("../../../assets/landmarks/armenian-church.webp"),
     name: "Armenian Church",
     category: "religious",
     lat: 1.2930717,
@@ -1377,6 +1469,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "sri-thendayuthapani-temple",
+    image: require("../../../assets/landmarks/sri-thendayuthapani-temple.webp"),
     name: "Sri Thendayuthapani Temple",
     category: "religious",
     lat: 1.2943222,
@@ -1390,6 +1483,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "changi-chapel-museum",
+    image: require("../../../assets/landmarks/changi-chapel-museum.webp"),
     name: "Changi Chapel and Museum",
     category: "culture",
     lat: 1.362212,
@@ -1403,6 +1497,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "the-intan",
+    image: require("../../../assets/landmarks/the-intan.webp"),
     name: "The Intan",
     category: "culture",
     lat: 1.3146307,
@@ -1416,6 +1511,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "skyhelix-sentosa",
+    image: require("../../../assets/landmarks/skyhelix-sentosa.webp"),
     name: "SkyHelix Sentosa",
     category: "entertainment",
     lat: 1.2549381,
@@ -1429,6 +1525,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "wings-of-time",
+    image: require("../../../assets/landmarks/wings-of-time.webp"),
     name: "Wings of Time",
     category: "entertainment",
     lat: 1.2513337,
@@ -1442,6 +1539,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "pinnacle-duxton-skybridge",
+    image: require("../../../assets/landmarks/pinnacle-duxton-skybridge.webp"),
     name: "Pinnacle@Duxton Skybridge",
     category: "landmark",
     lat: 1.2757339,
@@ -1455,6 +1553,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "changi-jurassic-mile",
+    image: require("../../../assets/landmarks/changi-jurassic-mile.webp"),
     name: "Changi Jurassic Mile",
     category: "entertainment",
     lat: 1.3348184,
@@ -1468,6 +1567,7 @@ export const ALL_LANDMARKS: Landmark[] = [
   },
   {
     id: "tiong-bahru-estate",
+    image: require("../../../assets/landmarks/tiong-bahru-estate.webp"),
     name: "Tiong Bahru Estate",
     category: "culture",
     lat: 1.2844955,
