@@ -116,7 +116,6 @@ export default function MapScreen() {
   const [selectedDistanceM, setSelectedDistanceM] = useState<number | null>(
     null
   );
-
   // Collected landmark ids (proximity discovery, Step 6) + a ref mirror so the
   // live-fix callback can read the latest set without re-subscribing. This is a
   // separate axis from the visited-cell fog: a landmark is collected by getting
@@ -406,7 +405,9 @@ export default function MapScreen() {
       .catch((e) => console.warn("distance fix failed", e));
   }, []);
 
-  const closeSheet = useCallback(() => setSelected(null), []);
+  const closeSheet = useCallback(() => {
+    setSelected(null);
+  }, []);
 
   // A lone discovery drives the single celebration modal; two-or-more routes to
   // the list sheet instead, so `singleDiscovery` is null whenever the sheet owns

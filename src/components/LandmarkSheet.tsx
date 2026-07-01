@@ -113,19 +113,23 @@ function Body({
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-      {/* Hero: real photo if provided, else a tinted placeholder with the glyph. */}
+      {/* Hero: the landmark photos are transparent cut-outs, so they ride on a
+          plain neutral panel (a colored backdrop would show through the alpha).
+          The photo is a 1:1 square at 80% of the hero height — framed, not
+          edge-to-edge. No photo → the category tint + glyph placeholder. */}
       <View style={styles.hero}>
         {landmark.image ? (
-          <Image source={landmark.image} style={styles.heroFill} resizeMode="cover" />
+          <Image source={landmark.image} style={styles.heroImg} resizeMode="contain" />
         ) : (
-          <LinearGradient
-            colors={[meta.tintA, meta.tintB]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.heroFill, styles.heroCenter]}
-          >
+          <>
+            <LinearGradient
+              colors={[meta.tintA, meta.tintB]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
             <Text style={styles.heroEmoji}>{beaconEmoji(landmark)}</Text>
-          </LinearGradient>
+          </>
         )}
         <View style={styles.catChip}>
           <Text style={[styles.catChipText, { color: meta.color }]}>{meta.label}</Text>
@@ -205,9 +209,20 @@ const styles = StyleSheet.create({
   },
   handle: { alignSelf: 'center', width: 44, height: 5, borderRadius: 3, backgroundColor: '#DCDAEC' },
 
-  hero: { marginHorizontal: 16, marginTop: 14, height: 174, borderRadius: 24, overflow: 'hidden' },
-  heroFill: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  heroCenter: { alignItems: 'center', justifyContent: 'center' },
+  hero: {
+    marginHorizontal: 16,
+    marginTop: 14,
+    height: 174,
+    borderRadius: 24,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F6F5FC',
+  },
+  // Transparent 1:1 cut-out at 80% of the hero height; aspectRatio 1 lets the
+  // width follow. Explicit height (not absolute inset:0) so Android measures &
+  // paints it — an absolute-only <Image> lays out as 0×0 there.
+  heroImg: { height: '80%', aspectRatio: 1 },
   heroEmoji: { fontSize: 70 },
   catChip: {
     position: 'absolute',

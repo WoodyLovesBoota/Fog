@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { Screen } from '@/components/Screen';
@@ -100,11 +100,15 @@ function CollectedCard({ landmark, onPress }: { landmark: Landmark; onPress: () 
   const meta = CATEGORY_META[landmark.category];
   return (
     <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
-      <View style={[styles.thumb, { backgroundColor: meta.tintA }]}>
-        <View style={[styles.pin, { backgroundColor: meta.color }]}>
-          <View style={styles.pinDot} />
+      {landmark.image ? (
+        <Image source={landmark.image} style={styles.thumb} resizeMode="cover" />
+      ) : (
+        <View style={[styles.thumb, { backgroundColor: meta.tintA }]}>
+          <View style={[styles.pin, { backgroundColor: meta.color }]}>
+            <View style={styles.pinDot} />
+          </View>
         </View>
-      </View>
+      )}
       <View style={styles.cardText}>
         <Text style={styles.cardName} numberOfLines={1}>
           {landmark.name}
@@ -166,7 +170,7 @@ const styles = StyleSheet.create({
   // Locked cards are flat per the handoff: translucent fill, NO shadow (the
   // collected cards are the only ones that float).
   cardLocked: { backgroundColor: 'rgba(255,255,255,0.5)', shadowOpacity: 0, elevation: 0 },
-  thumb: { width: 60, height: 60, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  thumb: { width: 60, height: 60, borderRadius: 18, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   thumbLocked: { opacity: 0.7 },
   pin: {
     width: 26,

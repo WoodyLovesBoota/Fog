@@ -1,4 +1,4 @@
-import type { ImageSourcePropType } from 'react-native';
+import type { ImageSourcePropType } from "react-native";
 
 /**
  * Singapore landmark beacons.
