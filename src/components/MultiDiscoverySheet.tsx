@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   Easing,
   FlatList,
   Image,
@@ -10,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,7 +18,11 @@ import { colors, fonts, shadows, spacing } from '@/theme/tokens';
 import { CATEGORY_META, type Landmark } from '@/features/poi/landmarks';
 import { beaconEmoji } from '@/features/poi/landmarkGeo';
 
-const SCREEN_H = Dimensions.get('window').height;
+/** Hoisted so FlatList sees a stable component (an inline arrow would remount
+    every separator each render). */
+function RowSeparator() {
+  return <View style={styles.sep} />;
+}
 
 /**
  * Multi-discovery bottom sheet (Step 6.1).
@@ -51,6 +55,7 @@ export function MultiDiscoverySheet({
   onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const { height: screenH } = useWindowDimensions();
   const anim = useRef(new Animated.Value(0)).current; // 0 = hidden, 1 = shown
   // Kept mounted through the slide-down so the exit animation still has rows.
   const [shown, setShown] = useState<Landmark[]>([]);
@@ -78,7 +83,7 @@ export function MultiDiscoverySheet({
     }
   }, [open, items, anim]);
 
-  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [SCREEN_H, 0] });
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [screenH, 0] });
 
   return (
     <Modal visible={shown.length > 0} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
@@ -100,8 +105,8 @@ export function MultiDiscoverySheet({
             keyExtractor={(item) => item.id}
             style={styles.list}
             showsVerticalScrollIndicator={false}
-            ItemSeparatorComponent={() => <View style={styles.sep} />}
-            renderItem={({ item }) => <Row landmark={item} onPress={() => onSelect(item)} />}
+            ItemSeparatorComponent={RowSeparator}
+            renderItem={({ item }) => <Row landmark={item} onSelect={onSelect} />}
           />
 
           <Pressable onPress={onClose} style={styles.cta} accessibilityRole="button">
@@ -115,10 +120,16 @@ export function MultiDiscoverySheet({
   );
 }
 
-function Row({ landmark, onPress }: { landmark: Landmark; onPress: () => void }) {
+const Row = memo(function Row({
+  landmark,
+  onSelect,
+}: {
+  landmark: Landmark;
+  onSelect: (lm: Landmark) => void;
+}) {
   const meta = CATEGORY_META[landmark.category];
   return (
-    <Pressable style={styles.row} onPress={onPress} accessibilityRole="button">
+    <Pressable style={styles.row} onPress={() => onSelect(landmark)} accessibilityRole="button">
       {landmark.image ? (
         <Image source={landmark.image} style={styles.thumb} resizeMode="cover" />
       ) : (
@@ -149,7 +160,7 @@ function Row({ landmark, onPress }: { landmark: Landmark; onPress: () => void })
       </View>
     </Pressable>
   );
-}
+});
 
 const styles = StyleSheet.create({
   fill: { flex: 1 },

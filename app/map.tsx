@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
@@ -75,6 +75,31 @@ const FOG_PAINT = {
   "fill-opacity": 0.7,
 } as const;
 const FOG_IMAGES = { [CLOUD_IMAGE_ID]: CLOUD_TILE } as const;
+
+/** One landmark beacon on the map. Memoized so the frequent screen re-renders
+    (toast flashes, tracking toggles, sheet opens) never touch the native
+    markers: with a stable `onSelect`, every prop here is reference-equal
+    across renders, so MapLibre re-syncs a marker only when the landmark set
+    itself changes. The inline closure below is safe — it's inside the memo
+    boundary, recreated only when this component actually re-renders. */
+const PinMarker = memo(function PinMarker({
+  landmark,
+  onSelect,
+}: {
+  landmark: Landmark;
+  onSelect: (lm: Landmark) => void;
+}) {
+  return (
+    <Marker
+      id={landmark.id}
+      lngLat={[landmark.lng, landmark.lat]}
+      anchor="top"
+      onPress={() => onSelect(landmark)}
+    >
+      <LandmarkPin landmark={landmark} />
+    </Marker>
+  );
+});
 
 /**
  * Real geographic map screen: MapLibre + Stadia tiles, gated behind a one-time
@@ -319,7 +344,16 @@ export default function MapScreen() {
   useEffect(() => {
     const sub = AppState.addEventListener("change", (s) => {
       if (s === "active") {
-        void repo.load().then(setVisitedCells);
+        // Keep the previous array identity when nothing changed while away —
+        // cells are append-only, so equal length ⇒ same set. This skips the
+        // fogMask rebuild + full GeoJSON source re-upload on every foreground.
+        void repo
+          .load()
+          .then((cells) =>
+            setVisitedCells((prev) =>
+              cells.length === prev.length ? prev : cells
+            )
+          );
         if (trackingRef.current) void startForegroundFallback();
       } else {
         stopForegroundFallback();
@@ -366,43 +400,65 @@ export default function MapScreen() {
 
   // Bottom button: pause/resume tracking. Resume re-requests permission and
   // prefers the always-on background task; pause stops whichever driver is live.
+  // The busy ref swallows taps while a toggle is still in flight — a double-tap
+  // would otherwise race two enable/disable sequences against each other.
+  const togglingRef = useRef(false);
   const toggleTracking = useCallback(async () => {
-    if (trackingMode === "off") {
-      // enableBackgroundTracking is our permission gateway; it returns 'ok' when
-      // "Always" is granted, 'foreground-only' for "While Using", 'denied' otherwise.
-      // On 'ok' it ALSO starts the foreground-service-backed OS task right here —
-      // while we're still in the foreground, where starting an FGS is allowed —
-      // and we leave it running across background/foreground for the whole
-      // session. 'foreground-only' can't run an OS task; the watcher is then its
-      // only driver (records only while the app is open).
-      const result = await enableBackgroundTracking();
-      if (result === "denied") {
-        router.replace("/denied");
-        return;
+    if (togglingRef.current) return;
+    togglingRef.current = true;
+    try {
+      if (trackingMode === "off") {
+        // enableBackgroundTracking is our permission gateway; it returns 'ok' when
+        // "Always" is granted, 'foreground-only' for "While Using", 'denied' otherwise.
+        // On 'ok' it ALSO starts the foreground-service-backed OS task right here —
+        // while we're still in the foreground, where starting an FGS is allowed —
+        // and we leave it running across background/foreground for the whole
+        // session. 'foreground-only' can't run an OS task; the watcher is then its
+        // only driver (records only while the app is open).
+        const result = await enableBackgroundTracking();
+        if (result === "denied") {
+          router.replace("/denied");
+          return;
+        }
+        // We're in the foreground now → run the live watcher so the HUD/fog update
+        // as you walk with the app open. It marks itself the active driver, so the
+        // always-on OS task ('ok' mode) skips ingesting until we background.
+        await startForegroundFallback();
+        setTrackingMode(result === "ok" ? "background" : "foreground");
+      } else {
+        stopForegroundFallback();
+        await disableBackgroundTracking();
+        setTrackingMode("off");
       }
-      // We're in the foreground now → run the live watcher so the HUD/fog update
-      // as you walk with the app open. It marks itself the active driver, so the
-      // always-on OS task ('ok' mode) skips ingesting until we background.
-      await startForegroundFallback();
-      setTrackingMode(result === "ok" ? "background" : "foreground");
-    } else {
-      stopForegroundFallback();
-      await disableBackgroundTracking();
-      setTrackingMode("off");
+    } finally {
+      togglingRef.current = false;
     }
   }, [trackingMode, router]);
 
   // Tap a beacon → open its detail sheet and resolve the live distance from the
-  // user's current position. Distance stays null (shows "Calculating…") if the fix
-  // fails; reopening retries.
+  // user's position. The OS-cached fix fills the distance instantly (no
+  // seconds-long "Calculating…" while GPS locks), then a fresh fix refines it.
+  // The target ref drops late fixes that belong to a previously-opened
+  // landmark, so quickly switching pins can't show the wrong distance.
+  const distanceTargetRef = useRef<string | null>(null);
   const openLandmark = useCallback((lm: Landmark) => {
     setSelected(lm);
     setSelectedDistanceM(null);
-    getCurrentPosition()
-      .then((pos) => {
-        setSelectedDistanceM(haversineMeters(pos.lat, pos.lng, lm.lat, lm.lng));
-      })
-      .catch((e) => console.warn("distance fix failed", e));
+    distanceTargetRef.current = lm.id;
+    const setIfCurrent = (lat: number, lng: number) => {
+      if (distanceTargetRef.current !== lm.id) return;
+      setSelectedDistanceM(haversineMeters(lat, lng, lm.lat, lm.lng));
+    };
+    void (async () => {
+      const last = await getLastKnownPosition();
+      if (last) setIfCurrent(last.lat, last.lng);
+      try {
+        const pos = await getCurrentPosition();
+        setIfCurrent(pos.lat, pos.lng);
+      } catch (e) {
+        console.warn("distance fix failed", e);
+      }
+    })();
   }, []);
 
   const closeSheet = useCallback(() => {
@@ -436,6 +492,8 @@ export default function MapScreen() {
   // fix immediately keeps the button responsive, then a fresh fix nudges to the
   // exact spot. (The old jumpTo teleported straight to the last fix, leaving the
   // follow-up flyTo nothing to animate, so it looked like an instant cut.)
+  // If the fresh fix lands basically on top of the cached one, skip the second
+  // flyTo — restarting the animation mid-glide reads as a stutter for no gain.
   const recenter = useCallback(async () => {
     const last = await getLastKnownPosition();
     if (last) {
@@ -447,6 +505,9 @@ export default function MapScreen() {
     }
     try {
       const pos = await getCurrentPosition();
+      if (last && haversineMeters(pos.lat, pos.lng, last.lat, last.lng) < 25) {
+        return;
+      }
       cameraRef.current?.flyTo({
         center: [pos.lng, pos.lat],
         zoom: 16,
@@ -523,15 +584,7 @@ export default function MapScreen() {
             landmarks are drawn; the undiscovered 90 are intentionally absent so
             their location can't be read off the map. */}
         {visiblePins.map((lm) => (
-          <Marker
-            key={lm.id}
-            id={lm.id}
-            lngLat={[lm.lng, lm.lat]}
-            anchor="top"
-            onPress={() => openLandmark(lm)}
-          >
-            <LandmarkPin landmark={lm} />
-          </Marker>
+          <PinMarker key={lm.id} landmark={lm} onSelect={openLandmark} />
         ))}
       </MapView>
 

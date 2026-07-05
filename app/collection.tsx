@@ -1,5 +1,5 @@
-import { useCallback, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import { FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 
 import { Screen } from '@/components/Screen';
@@ -7,7 +7,7 @@ import { LandmarkSheet } from '@/components/LandmarkSheet';
 import { LockIcon } from '@/components/icons';
 import { colors, fonts, shadows, spacing } from '@/theme/tokens';
 import { loadCollected } from '@/adapters/storage/collectedRepo';
-import { getCurrentPosition } from '@/services/location';
+import { getCurrentPosition, getLastKnownPosition } from '@/services/location';
 import { haversineMeters } from '@/core/exploration/distance';
 import { CATEGORY_META, LANDMARKS, type Landmark } from '@/features/poi/landmarks';
 import { annotateLandmarks, type LandmarkWithStatus } from '@/features/poi/collectedLandmarks';
@@ -19,10 +19,28 @@ import { annotateLandmarks, type LandmarkWithStatus } from '@/features/poi/colle
  * rest are locked "???" cards. Tapping a collected card opens the same detail
  * sheet the map uses, with the live distance resolved on open. Re-reads the
  * collected set on focus so a discovery made on the map shows up here.
+ *
+ * Rendered as ONE virtualized FlatList (section headers are just rows): with
+ * ~100 landmarks, an eager ScrollView would mount every card during the push
+ * transition and jank the slide-in; virtualization keeps the initial mount to a
+ * screenful.
  */
+
+/** Last collected ids seen by this screen, kept module-level so re-entering
+    paints the real list on the very first frame instead of flashing empty
+    while AsyncStorage loads. `null` until the first successful load. */
+let lastCollectedIds: string[] | null = null;
+
+/** One flat list feeds the whole screen: header rows + landmark rows. */
+type ListRow =
+  | { kind: 'header'; key: string; title: string }
+  | { kind: 'landmark'; key: string; landmark: LandmarkWithStatus };
+
 export default function CollectionScreen() {
   const router = useRouter();
-  const [items, setItems] = useState<LandmarkWithStatus[]>([]);
+  const [items, setItems] = useState<LandmarkWithStatus[]>(() =>
+    lastCollectedIds ? annotateLandmarks(LANDMARKS, lastCollectedIds) : [],
+  );
   const [selected, setSelected] = useState<Landmark | null>(null);
   const [selectedDistanceM, setSelectedDistanceM] = useState<number | null>(null);
 
@@ -31,6 +49,7 @@ export default function CollectionScreen() {
       let active = true;
       (async () => {
         const ids = await loadCollected();
+        lastCollectedIds = ids;
         if (active) setItems(annotateLandmarks(LANDMARKS, ids));
       })();
       return () => {
@@ -39,16 +58,55 @@ export default function CollectionScreen() {
     }, []),
   );
 
+  // Cached fix first (instant number), fresh fix refines; the target ref drops
+  // a late fix that belongs to a previously-opened landmark.
+  const distanceTargetRef = useRef<string | null>(null);
   const openDetail = useCallback((lm: Landmark) => {
     setSelected(lm);
     setSelectedDistanceM(null);
-    getCurrentPosition()
-      .then((pos) => setSelectedDistanceM(haversineMeters(pos.lat, pos.lng, lm.lat, lm.lng)))
-      .catch((e) => console.warn('distance fix failed', e));
+    distanceTargetRef.current = lm.id;
+    const setIfCurrent = (lat: number, lng: number) => {
+      if (distanceTargetRef.current !== lm.id) return;
+      setSelectedDistanceM(haversineMeters(lat, lng, lm.lat, lm.lng));
+    };
+    void (async () => {
+      const last = await getLastKnownPosition();
+      if (last) setIfCurrent(last.lat, last.lng);
+      try {
+        const pos = await getCurrentPosition();
+        setIfCurrent(pos.lat, pos.lng);
+      } catch (e) {
+        console.warn('distance fix failed', e);
+      }
+    })();
   }, []);
 
-  const collected = items.filter((l) => l.collected);
-  const locked = items.filter((l) => !l.collected);
+  const collectedCount = useMemo(() => items.filter((l) => l.collected).length, [items]);
+
+  const rows = useMemo<ListRow[]>(() => {
+    const collected = items.filter((l) => l.collected);
+    const locked = items.filter((l) => !l.collected);
+    const out: ListRow[] = [];
+    if (collected.length > 0) {
+      out.push({ kind: 'header', key: 'h-collected', title: 'Collected' });
+      collected.forEach((l) => out.push({ kind: 'landmark', key: l.id, landmark: l }));
+    }
+    out.push({ kind: 'header', key: 'h-locked', title: 'Not yet found' });
+    locked.forEach((l) => out.push({ kind: 'landmark', key: l.id, landmark: l }));
+    return out;
+  }, [items]);
+
+  const renderRow = useCallback(
+    ({ item }: { item: ListRow }) => {
+      if (item.kind === 'header') return <Text style={styles.section}>{item.title}</Text>;
+      return item.landmark.collected ? (
+        <CollectedCard landmark={item.landmark} onPress={openDetail} />
+      ) : (
+        <LockedCard landmark={item.landmark} />
+      );
+    },
+    [openDetail],
+  );
 
   return (
     <Screen colors={colors.statsGradient}>
@@ -66,24 +124,18 @@ export default function CollectionScreen() {
         </View>
 
         <Text style={styles.count}>
-          {collected.length} / {items.length} collected
+          {collectedCount} / {LANDMARKS.length} collected
         </Text>
 
-        <ScrollView
+        <FlatList
+          data={rows}
+          keyExtractor={(row) => row.key}
+          renderItem={renderRow}
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-        >
-          {collected.length > 0 && <Text style={styles.section}>Collected</Text>}
-          {collected.map((l) => (
-            <CollectedCard key={l.id} landmark={l} onPress={() => openDetail(l)} />
-          ))}
-
-          <Text style={styles.section}>Not yet found</Text>
-          {locked.map((l) => (
-            <LockedCard key={l.id} landmark={l} />
-          ))}
-        </ScrollView>
+          initialNumToRender={12}
+        />
       </View>
 
       <LandmarkSheet
@@ -96,10 +148,16 @@ export default function CollectionScreen() {
   );
 }
 
-function CollectedCard({ landmark, onPress }: { landmark: Landmark; onPress: () => void }) {
+const CollectedCard = memo(function CollectedCard({
+  landmark,
+  onPress,
+}: {
+  landmark: Landmark;
+  onPress: (lm: Landmark) => void;
+}) {
   const meta = CATEGORY_META[landmark.category];
   return (
-    <Pressable style={styles.card} onPress={onPress} accessibilityRole="button">
+    <Pressable style={styles.card} onPress={() => onPress(landmark)} accessibilityRole="button">
       {landmark.image ? (
         <Image source={landmark.image} style={styles.thumb} resizeMode="cover" />
       ) : (
@@ -120,9 +178,9 @@ function CollectedCard({ landmark, onPress }: { landmark: Landmark; onPress: () 
       </View>
     </Pressable>
   );
-}
+});
 
-function LockedCard({ landmark }: { landmark: Landmark }) {
+const LockedCard = memo(function LockedCard({ landmark }: { landmark: Landmark }) {
   const meta = CATEGORY_META[landmark.category];
   return (
     <View style={[styles.card, styles.cardLocked]}>
@@ -135,7 +193,7 @@ function LockedCard({ landmark }: { landmark: Landmark }) {
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   root: { flex: 1, paddingHorizontal: 24 },

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import {
   Animated,
-  Dimensions,
   Easing,
   Image,
   Modal,
@@ -10,6 +9,7 @@ import {
   StyleSheet,
   Text,
   View,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -17,8 +17,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { colors, fonts, shadows, spacing } from '@/theme/tokens';
 import { CATEGORY_META, type Landmark } from '@/features/poi/landmarks';
 import { beaconEmoji } from '@/features/poi/landmarkGeo';
-
-const SCREEN_H = Dimensions.get('window').height;
 
 /**
  * Landmark detail bottom sheet (design handoff).
@@ -45,13 +43,19 @@ export function LandmarkSheet({
   onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
+  const { height: screenH } = useWindowDimensions();
   const anim = useRef(new Animated.Value(0)).current; // 0 = hidden, 1 = shown
   // Kept mounted through the slide-down so the exit animation still has content.
-  const [shown, setShown] = useState<Landmark | null>(null);
+  // `collected` is latched here too: the caller derives it from the live
+  // selection, which resets the instant the sheet is asked to close — without
+  // the latch, a collected landmark's badge would flip to "Not colored yet"
+  // mid slide-down. (Re-running the open timing when `collected` changes while
+  // open is a no-op: it animates 1 → 1.)
+  const [shown, setShown] = useState<{ landmark: Landmark; collected: boolean } | null>(null);
 
   useEffect(() => {
     if (landmark) {
-      setShown(landmark);
+      setShown({ landmark, collected });
       Animated.timing(anim, {
         toValue: 1,
         duration: 300,
@@ -68,9 +72,9 @@ export function LandmarkSheet({
         if (finished) setShown(null);
       });
     }
-  }, [landmark, anim]);
+  }, [landmark, collected, anim]);
 
-  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [SCREEN_H, 0] });
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [screenH, 0] });
 
   return (
     <Modal visible={shown != null} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
@@ -85,7 +89,7 @@ export function LandmarkSheet({
         >
           <View style={styles.handle} />
           {shown && (
-            <Body landmark={shown} distanceM={distanceM} collected={collected} onClose={onClose} />
+            <Body landmark={shown.landmark} distanceM={distanceM} collected={shown.collected} onClose={onClose} />
           )}
         </Animated.View>
       </View>
@@ -134,7 +138,8 @@ function Body({
         <View style={styles.catChip}>
           <Text style={[styles.catChipText, { color: meta.color }]}>{meta.label}</Text>
         </View>
-        <Pressable onPress={onClose} style={styles.close} accessibilityRole="button" accessibilityLabel="Close">
+        {/* 32px visual, but hitSlop pads the touch target to ~44px (a11y minimum). */}
+        <Pressable onPress={onClose} style={styles.close} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close">
           <Text style={styles.closeGlyph}>✕</Text>
         </Pressable>
       </View>

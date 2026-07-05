@@ -20,10 +20,15 @@ type Row = {
   shape: 'hex' | 'circle' | 'diamond';
 };
 
+/** Last stats this screen showed, kept module-level so re-entering paints the
+    real numbers on the first frame instead of flashing zeros while the three
+    AsyncStorage reads resolve. */
+let lastShownStats = { areas: 0, distanceM: 0, dayStreak: 0, collected: 0 };
+
 export default function StatsScreen() {
   const router = useRouter();
   const repo = useMemo(() => new AsyncVisitedRepository(), []);
-  const [data, setData] = useState({ areas: 0, distanceM: 0, dayStreak: 0, collected: 0 });
+  const [data, setData] = useState(lastShownStats);
 
   // Reload real, on-device data every time the screen comes into focus, so it
   // reflects whatever was explored on the map before navigating here.
@@ -36,14 +41,14 @@ export default function StatsScreen() {
           loadStats(),
           loadCollected(),
         ]);
-        if (active) {
-          setData({
-            areas: cells.length,
-            distanceM: stats.distanceM,
-            dayStreak: stats.dayStreak,
-            collected: countCollected(LANDMARKS, collectedIds),
-          });
-        }
+        const next = {
+          areas: cells.length,
+          distanceM: stats.distanceM,
+          dayStreak: stats.dayStreak,
+          collected: countCollected(LANDMARKS, collectedIds),
+        };
+        lastShownStats = next;
+        if (active) setData(next);
       })();
       return () => {
         active = false;

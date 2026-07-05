@@ -1,18 +1,23 @@
 import { StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeInUp, FadeOut } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { colors, fonts, shadows } from '@/theme/tokens';
 
 /** Floating green confirmation pill shown when a new cell is uncovered. */
 export function Toast({ message }: { message: string | null }) {
+  // Offset from the safe-area top, not the screen top: a fixed `top` would sit
+  // the pill under the status bar / on top of the progress badge on notched
+  // phones. 64 clears the badge row (insets.top + 12 + ~44px of badge).
+  const insets = useSafeAreaInsets();
   if (!message) return null;
   return (
     <Animated.View
       entering={FadeInUp.duration(220)}
       exiting={FadeOut.duration(200)}
       pointerEvents="none"
-      style={styles.wrap}
+      style={[styles.wrap, { top: insets.top + 64 }]}
     >
       <LinearGradient
         colors={colors.toastGradient}
@@ -28,7 +33,7 @@ export function Toast({ message }: { message: string | null }) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', top: 64, alignSelf: 'center', zIndex: 16 },
+  wrap: { position: 'absolute', alignSelf: 'center', zIndex: 16 },
   pill: {
     flexDirection: 'row',
     alignItems: 'center',
