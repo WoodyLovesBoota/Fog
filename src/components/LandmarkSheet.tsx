@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   Easing,
@@ -14,7 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, fonts, shadows, spacing } from '@/theme/tokens';
+import { colors, fonts, press, shadows, spacing } from '@/theme/tokens';
 import { CATEGORY_META, type Landmark } from '@/features/poi/landmarks';
 import { beaconEmoji } from '@/features/poi/landmarkGeo';
 
@@ -109,11 +109,18 @@ function Body({
   onClose: () => void;
 }) {
   const meta = CATEGORY_META[landmark.category];
-  const infoRows = [
-    landmark.hours && { key: 'hours', label: 'Hours', value: landmark.hours, glyph: <View style={styles.gRing} /> },
-    landmark.area && { key: 'area', label: 'Region', value: landmark.area, glyph: <View style={styles.gDrop} /> },
-    landmark.tip && { key: 'tip', label: 'Good to know', value: landmark.tip, glyph: <View style={styles.gDot} /> },
-  ].filter(Boolean) as { key: string; label: string; value: string; glyph: React.ReactNode }[];
+  // Memoized on the landmark: the body re-renders for every distance
+  // refinement while open, and these rows (and their glyph elements) never
+  // change with distance.
+  const infoRows = useMemo(
+    () =>
+      [
+        landmark.hours && { key: 'hours', label: 'Hours', value: landmark.hours, glyph: <View style={styles.gRing} /> },
+        landmark.area && { key: 'area', label: 'Region', value: landmark.area, glyph: <View style={styles.gDrop} /> },
+        landmark.tip && { key: 'tip', label: 'Good to know', value: landmark.tip, glyph: <View style={styles.gDot} /> },
+      ].filter(Boolean) as { key: string; label: string; value: string; glyph: React.ReactNode }[],
+    [landmark],
+  );
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
@@ -139,7 +146,13 @@ function Body({
           <Text style={[styles.catChipText, { color: meta.color }]}>{meta.label}</Text>
         </View>
         {/* 32px visual, but hitSlop pads the touch target to ~44px (a11y minimum). */}
-        <Pressable onPress={onClose} style={styles.close} hitSlop={8} accessibilityRole="button" accessibilityLabel="Close">
+        <Pressable
+          onPress={onClose}
+          style={({ pressed }) => [styles.close, pressed && press.chip]}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+        >
           <Text style={styles.closeGlyph}>✕</Text>
         </Pressable>
       </View>
@@ -182,7 +195,11 @@ function Body({
       )}
 
       {/* Close action. */}
-      <Pressable onPress={onClose} style={styles.cta} accessibilityRole="button">
+      <Pressable
+        onPress={onClose}
+        style={({ pressed }) => [styles.cta, pressed && press.button]}
+        accessibilityRole="button"
+      >
         <LinearGradient colors={colors.primaryButton} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.ctaInner}>
           <Text style={styles.ctaText}>Close</Text>
         </LinearGradient>

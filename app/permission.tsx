@@ -55,7 +55,9 @@ export default function PermissionScreen() {
         </View>
 
         <View style={styles.cta}>
-          <PrimaryButton label={busy ? 'Requesting…' : 'Allow Location'} onPress={onAllow} />
+          {/* Disabled while the OS dialog is up: the busy guard already blocks
+              re-entry, but the dimmed pill makes the wait visible. */}
+          <PrimaryButton label={busy ? 'Requesting…' : 'Allow Location'} onPress={onAllow} disabled={busy} />
           <TextLink onPress={() => router.replace('/denied')} style={{ marginTop: spacing.lg }}>
             Maybe later
           </TextLink>

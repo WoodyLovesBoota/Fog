@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, View, type ViewStyle } from 'react-native';
 
 import { colors, shadows } from '@/theme/tokens';
@@ -20,7 +20,7 @@ const LIVE_COLOR = colors.statTints[1].fg;
 
 type Props = { style?: ViewStyle };
 
-export function LiveSignal({ style }: Props) {
+function LiveSignalBase({ style }: Props) {
   const [live, setLive] = useState(false);
   const offTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pulse = useRef(new Animated.Value(0)).current;
@@ -65,6 +65,11 @@ export function LiveSignal({ style }: Props) {
     </View>
   );
 }
+
+/** Memoized: the dot drives itself off locationEvents, so the map screen's
+    frequent re-renders (toasts, fog updates) never need to touch it — with a
+    stable `style` prop it re-renders only on its own live/pulse state. */
+export const LiveSignal = memo(LiveSignalBase);
 
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', width: 14, height: 14, alignItems: 'center', justifyContent: 'center' },

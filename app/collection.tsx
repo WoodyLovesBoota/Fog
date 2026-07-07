@@ -5,7 +5,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/components/Screen';
 import { LandmarkSheet } from '@/components/LandmarkSheet';
 import { LockIcon } from '@/components/icons';
-import { colors, fonts, shadows, spacing } from '@/theme/tokens';
+import { colors, fonts, press, shadows, spacing } from '@/theme/tokens';
 import { loadCollected } from '@/adapters/storage/collectedRepo';
 import { getCurrentPosition, getLastKnownPosition } from '@/services/location';
 import { haversineMeters } from '@/core/exploration/distance';
@@ -116,7 +116,7 @@ export default function CollectionScreen() {
             onPress={() => router.back()}
             accessibilityRole="button"
             accessibilityLabel="Back to map"
-            style={styles.back}
+            style={({ pressed }) => [styles.back, pressed && press.chip]}
           >
             <Text style={styles.backGlyph}>‹</Text>
           </Pressable>
@@ -127,6 +127,9 @@ export default function CollectionScreen() {
           {collectedCount} / {LANDMARKS.length} collected
         </Text>
 
+        {/* Batch/window tuning: cards are ~85px tall, so 10-per-batch fills a
+            screen per pass and a 7-screen window comfortably covers fast flings
+            without keeping all ~100 rows mounted. */}
         <FlatList
           data={rows}
           keyExtractor={(row) => row.key}
@@ -135,6 +138,8 @@ export default function CollectionScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           initialNumToRender={12}
+          maxToRenderPerBatch={10}
+          windowSize={7}
         />
       </View>
 
@@ -157,7 +162,11 @@ const CollectedCard = memo(function CollectedCard({
 }) {
   const meta = CATEGORY_META[landmark.category];
   return (
-    <Pressable style={styles.card} onPress={() => onPress(landmark)} accessibilityRole="button">
+    <Pressable
+      style={({ pressed }) => [styles.card, pressed && press.row]}
+      onPress={() => onPress(landmark)}
+      accessibilityRole="button"
+    >
       {landmark.image ? (
         <Image source={landmark.image} style={styles.thumb} resizeMode="cover" />
       ) : (

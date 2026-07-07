@@ -14,7 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, fonts, shadows, spacing } from '@/theme/tokens';
+import { colors, fonts, press, shadows, spacing } from '@/theme/tokens';
 import { CATEGORY_META, type Landmark } from '@/features/poi/landmarks';
 import { beaconEmoji } from '@/features/poi/landmarkGeo';
 
@@ -109,7 +109,11 @@ export function MultiDiscoverySheet({
             renderItem={({ item }) => <Row landmark={item} onSelect={onSelect} />}
           />
 
-          <Pressable onPress={onClose} style={styles.cta} accessibilityRole="button">
+          <Pressable
+            onPress={onClose}
+            style={({ pressed }) => [styles.cta, pressed && press.button]}
+            accessibilityRole="button"
+          >
             <LinearGradient colors={colors.primaryButton} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.ctaInner}>
               <Text style={styles.ctaText}>Keep exploring</Text>
             </LinearGradient>
@@ -129,7 +133,11 @@ const Row = memo(function Row({
 }) {
   const meta = CATEGORY_META[landmark.category];
   return (
-    <Pressable style={styles.row} onPress={() => onSelect(landmark)} accessibilityRole="button">
+    <Pressable
+      style={({ pressed }) => [styles.row, pressed && press.row]}
+      onPress={() => onSelect(landmark)}
+      accessibilityRole="button"
+    >
       {landmark.image ? (
         <Image source={landmark.image} style={styles.thumb} resizeMode="cover" />
       ) : (

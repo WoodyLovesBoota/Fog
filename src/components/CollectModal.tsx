@@ -1,7 +1,7 @@
 import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
-import { colors, fonts, shadows } from '@/theme/tokens';
+import { colors, fonts, press, shadows } from '@/theme/tokens';
 import { CATEGORY_META, type Landmark } from '@/features/poi/landmarks';
 
 /**
@@ -69,12 +69,20 @@ export function CollectModal({
             </View>
 
             <View style={styles.actions}>
-              <Pressable onPress={() => onViewDetails(landmark)} accessibilityRole="button">
+              <Pressable
+                onPress={() => onViewDetails(landmark)}
+                accessibilityRole="button"
+                style={({ pressed }) => (pressed ? press.button : null)}
+              >
                 <LinearGradient colors={colors.primaryButton} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }} style={styles.primary}>
                   <Text style={styles.primaryText}>View details</Text>
                 </LinearGradient>
               </Pressable>
-              <Pressable onPress={onDismiss} accessibilityRole="button" style={styles.secondary}>
+              <Pressable
+                onPress={onDismiss}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.secondary, pressed && press.row]}
+              >
                 <Text style={styles.secondaryText}>Keep exploring</Text>
               </Pressable>
             </View>

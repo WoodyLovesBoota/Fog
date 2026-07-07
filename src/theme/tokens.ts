@@ -4,6 +4,19 @@
  * No component should hardcode a color, radius, or font; pull from here.
  */
 
+import type { ViewStyle } from 'react-native';
+
+/** Pressed-state feedback, shared by every tappable surface so the whole app
+    reacts to touch the same way (use inside a Pressable style callback). */
+export const press: Record<'button' | 'chip' | 'row', ViewStyle> = {
+  // Gradient CTAs: a subtle sink, like the prototype's button:active.
+  button: { transform: [{ scale: 0.98 }], opacity: 0.95 },
+  // Pills, FABs, icon buttons: small targets need a clearer shrink to read.
+  chip: { transform: [{ scale: 0.94 }], opacity: 0.85 },
+  // Full-width cards & list rows: dim only — scaling a wide row looks warped.
+  row: { opacity: 0.65 },
+};
+
 export const colors = {
   // Surfaces
   canvas: '#DEDBEF',

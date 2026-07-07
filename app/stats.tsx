@@ -5,7 +5,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { Screen } from '@/components/Screen';
 import { Hexagon, HexTile } from '@/components/Hexagon';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { colors, fonts, radii, shadows, spacing, type } from '@/theme/tokens';
+import { colors, fonts, press, radii, shadows, spacing, type } from '@/theme/tokens';
 import { AsyncVisitedRepository } from '@/adapters/storage/VisitedRepository.async';
 import { loadCollected } from '@/adapters/storage/collectedRepo';
 import { loadStats } from '@/services/exploreStats';
@@ -76,7 +76,7 @@ export default function StatsScreen() {
             onPress={() => router.back()}
             accessibilityRole="button"
             accessibilityLabel="Back to map"
-            style={styles.back}
+            style={({ pressed }) => [styles.back, pressed && press.chip]}
           >
             <Text style={styles.backGlyph}>‹</Text>
           </Pressable>

@@ -21,7 +21,7 @@ import {
   UserLocation,
 } from "@maplibre/maplibre-react-native";
 
-import { colors, fonts, shadows, type } from "@/theme/tokens";
+import { colors, fonts, press, shadows, type } from "@/theme/tokens";
 import { MAP_STYLE_URL, SINGAPORE_CENTER } from "@/config/mapConfig";
 import {
   ensureSingaporePack,
@@ -98,6 +98,75 @@ const PinMarker = memo(function PinMarker({
     >
       <LandmarkPin landmark={landmark} />
     </Marker>
+  );
+});
+
+/** The static overlay chrome: Collection/Stats pills + recenter FAB. Memoized
+    with stable callbacks so the screen's frequent re-renders (toast flashes,
+    fog updates, tracking toggles) never re-render these Pressables — they
+    redraw only if the safe-area inset changes. */
+const MapChrome = memo(function MapChrome({
+  bottomInset,
+  onCollection,
+  onStats,
+  onRecenter,
+}: {
+  bottomInset: number;
+  onCollection: () => void;
+  onStats: () => void;
+  onRecenter: () => void;
+}) {
+  return (
+    <>
+      {/* Collection pill (bottom-left, above Stats). */}
+      <Pressable
+        onPress={onCollection}
+        accessibilityRole="button"
+        accessibilityLabel="View collected landmarks"
+        style={({ pressed }) => [
+          styles.statsBtn,
+          { bottom: bottomInset + 148 },
+          pressed && press.chip,
+        ]}
+      >
+        <View style={styles.gridIcon}>
+          <View style={[styles.gridCell, { backgroundColor: "#7B9CF0" }]} />
+          <View style={[styles.gridCell, { backgroundColor: "#9FD6EC" }]} />
+          <View style={[styles.gridCell, { backgroundColor: "#A2E3CC" }]} />
+          <View style={[styles.gridCell, { backgroundColor: "#B3BEF6" }]} />
+        </View>
+        <Text style={styles.pillText}>Collection</Text>
+      </Pressable>
+
+      {/* Stats pill (bottom-left). */}
+      <Pressable
+        onPress={onStats}
+        accessibilityRole="button"
+        accessibilityLabel="View stats"
+        style={({ pressed }) => [
+          styles.statsBtn,
+          { bottom: bottomInset + 96 },
+          pressed && press.chip,
+        ]}
+      >
+        <BarsIcon color={colors.blueSoft} size={14} />
+        <Text style={styles.pillText}>Stats</Text>
+      </Pressable>
+
+      {/* Recenter FAB (bottom-right). */}
+      <Pressable
+        onPress={onRecenter}
+        accessibilityRole="button"
+        accessibilityLabel="Recenter to my location"
+        style={({ pressed }) => [
+          styles.fab,
+          { bottom: bottomInset + 96 },
+          pressed && press.chip,
+        ]}
+      >
+        <CrosshairIcon color={colors.blueDeep} size={26} />
+      </Pressable>
+    </>
   );
 });
 
@@ -401,11 +470,16 @@ export default function MapScreen() {
   // Bottom button: pause/resume tracking. Resume re-requests permission and
   // prefers the always-on background task; pause stops whichever driver is live.
   // The busy ref swallows taps while a toggle is still in flight — a double-tap
-  // would otherwise race two enable/disable sequences against each other.
+  // would otherwise race two enable/disable sequences against each other. The
+  // mirrored `toggling` state exists purely for the UI: it dims the button and
+  // swaps the label ("Starting…"/"Pausing…") so the wait — which can span an OS
+  // permission dialog — never reads as an unresponsive tap.
   const togglingRef = useRef(false);
+  const [toggling, setToggling] = useState(false);
   const toggleTracking = useCallback(async () => {
     if (togglingRef.current) return;
     togglingRef.current = true;
+    setToggling(true);
     try {
       if (trackingMode === "off") {
         // enableBackgroundTracking is our permission gateway; it returns 'ok' when
@@ -432,6 +506,7 @@ export default function MapScreen() {
       }
     } finally {
       togglingRef.current = false;
+      setToggling(false);
     }
   }, [trackingMode, router]);
 
@@ -494,29 +569,52 @@ export default function MapScreen() {
   // follow-up flyTo nothing to animate, so it looked like an instant cut.)
   // If the fresh fix lands basically on top of the cached one, skip the second
   // flyTo — restarting the animation mid-glide reads as a stutter for no gain.
+  // The in-flight ref swallows repeat taps: without it, mashing the FAB queues
+  // overlapping getCurrentPosition calls whose late flyTos restart the glide
+  // over and over.
+  const recenteringRef = useRef(false);
   const recenter = useCallback(async () => {
-    const last = await getLastKnownPosition();
-    if (last) {
-      cameraRef.current?.flyTo({
-        center: [last.lng, last.lat],
-        zoom: 16,
-        duration: 900,
-      });
-    }
+    if (recenteringRef.current) return;
+    recenteringRef.current = true;
     try {
-      const pos = await getCurrentPosition();
-      if (last && haversineMeters(pos.lat, pos.lng, last.lat, last.lng) < 25) {
-        return;
+      const last = await getLastKnownPosition();
+      if (last) {
+        cameraRef.current?.flyTo({
+          center: [last.lng, last.lat],
+          zoom: 16,
+          duration: 900,
+        });
       }
-      cameraRef.current?.flyTo({
-        center: [pos.lng, pos.lat],
-        zoom: 16,
-        duration: 900,
-      });
-    } catch (e) {
-      console.warn("recenter failed", e);
+      try {
+        const pos = await getCurrentPosition();
+        if (last && haversineMeters(pos.lat, pos.lng, last.lat, last.lng) < 25) {
+          return;
+        }
+        cameraRef.current?.flyTo({
+          center: [pos.lng, pos.lat],
+          zoom: 16,
+          duration: 900,
+        });
+      } catch (e) {
+        console.warn("recenter failed", e);
+      }
+    } finally {
+      recenteringRef.current = false;
     }
   }, []);
+
+  // Stable handlers + styles for the memoized chrome/HUD: a new closure or
+  // object literal in the JSX would defeat their memo on every re-render.
+  const openCollection = useCallback(() => router.push("/collection"), [router]);
+  const openStats = useCallback(() => router.push("/stats"), [router]);
+  const liveSignalStyle = useMemo(
+    () => ({ top: insets.top + 12, right: 20 }),
+    [insets.top]
+  );
+  const walkBtnStyle = useMemo(
+    () => ({ ...styles.walkBtn, bottom: insets.bottom + 20 }),
+    [insets.bottom]
+  );
 
   if (dl.status !== "done") {
     return (
@@ -537,7 +635,7 @@ export default function MapScreen() {
                 onPress={startDownload}
                 accessibilityRole="button"
                 accessibilityLabel="Download map again"
-                style={styles.retry}
+                style={({ pressed }) => [styles.retry, pressed && press.chip]}
               >
                 <Text style={styles.retryLabel}>Retry</Text>
               </Pressable>
@@ -608,53 +706,34 @@ export default function MapScreen() {
 
       {/* Liveness dot (top-right): breathes green while location fixes are
           arriving, rests muted when the pipeline is quiet. */}
-      <LiveSignal style={{ top: insets.top + 12, right: 20 }} />
+      <LiveSignal style={liveSignalStyle} />
 
       {/* "New area uncovered" toast. */}
       <Toast message={toast} />
 
-      {/* Collection pill (bottom-left, above Stats). */}
-      <Pressable
-        onPress={() => router.push("/collection")}
-        accessibilityRole="button"
-        accessibilityLabel="View collected landmarks"
-        style={[styles.statsBtn, { bottom: insets.bottom + 148 }]}
-      >
-        <View style={styles.gridIcon}>
-          <View style={[styles.gridCell, { backgroundColor: "#7B9CF0" }]} />
-          <View style={[styles.gridCell, { backgroundColor: "#9FD6EC" }]} />
-          <View style={[styles.gridCell, { backgroundColor: "#A2E3CC" }]} />
-          <View style={[styles.gridCell, { backgroundColor: "#B3BEF6" }]} />
-        </View>
-        <Text style={styles.pillText}>Collection</Text>
-      </Pressable>
+      {/* Collection/Stats pills + recenter FAB (memoized chrome). */}
+      <MapChrome
+        bottomInset={insets.bottom}
+        onCollection={openCollection}
+        onStats={openStats}
+        onRecenter={recenter}
+      />
 
-      {/* Stats pill (bottom-left). */}
-      <Pressable
-        onPress={() => router.push("/stats")}
-        accessibilityRole="button"
-        accessibilityLabel="View stats"
-        style={[styles.statsBtn, { bottom: insets.bottom + 96 }]}
-      >
-        <BarsIcon color={colors.blueSoft} size={14} />
-        <Text style={styles.pillText}>Stats</Text>
-      </Pressable>
-
-      {/* Recenter FAB (bottom-right). */}
-      <Pressable
-        onPress={recenter}
-        accessibilityRole="button"
-        accessibilityLabel="Recenter to my location"
-        style={[styles.fab, { bottom: insets.bottom + 96 }]}
-      >
-        <CrosshairIcon color={colors.blueDeep} size={26} />
-      </Pressable>
-
-      {/* Tracking toggle (bottom). */}
+      {/* Tracking toggle (bottom). Disabled while a toggle is in flight, with
+          an in-progress label, so the (possibly dialog-length) wait is visible. */}
       <PrimaryButton
-        label={tracking ? "Pause Exploring" : "Start Exploring"}
+        label={
+          toggling
+            ? trackingMode === "off"
+              ? "Starting…"
+              : "Pausing…"
+            : tracking
+              ? "Pause Exploring"
+              : "Start Exploring"
+        }
         onPress={toggleTracking}
-        style={{ ...styles.walkBtn, bottom: insets.bottom + 20 }}
+        disabled={toggling}
+        style={walkBtnStyle}
       />
 
       {/* Single discovery → the celebration modal (null when the batch has 2+,
