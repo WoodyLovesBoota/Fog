@@ -7,10 +7,9 @@ import { FloatingCloud } from '@/components/FloatingCloud';
 import { colors, fonts } from '@/theme/tokens';
 
 /**
- * Branded launch splash — the full design from
- * `handoff/project/싱가포르 탐험 스플래시.dc.html` (section A): the explorer
- * cloud mascot bobbing under a warm sun, the "Singapore Explorer" wordmark, and
- * three bouncing loader dots over the soft lilac gradient.
+ * Branded launch splash — the explorer cloud mascot bobbing under a warm sun,
+ * the "Singapore Explorer" wordmark, and three bouncing loader dots over the
+ * soft lilac gradient.
  *
  * Mounted once at app start (see app/_layout.tsx) so it only ever appears on a
  * COLD launch — it is never re-shown when the app returns from the background,

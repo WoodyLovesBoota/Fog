@@ -1,6 +1,5 @@
 /**
- * Design tokens — extracted verbatim from the handoff prototype
- * (handoff/project/prototype.html + CloudFace.dc.html).
+ * Design tokens — the single source of truth for color, radius, and type.
  * No component should hardcode a color, radius, or font; pull from here.
  */
 

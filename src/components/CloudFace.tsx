@@ -17,9 +17,8 @@ const BASE_H = 112;
 const INK = colors.ink;
 
 /**
- * The app mascot — a puffy cloud face. Ported from CloudFace.dc.html:
- * five overlapping white circles + a rounded base, with mood-driven eyes and
- * mouth and an optional explorer hat.
+ * The app mascot — a puffy cloud face: five overlapping white circles over a
+ * rounded base, with mood-driven eyes and mouth and an optional explorer hat.
  */
 function CloudFaceBase({ mood = 'happy', hat = false, scale = 1 }: Props) {
   const openEyes = mood !== 'sleepy';
