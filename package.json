@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "test": "vitest run",
-    "build:land-cells": "tsx scripts/buildLandCells.ts"
+    "build:land-cells": "tsx scripts/buildLandCells.ts",
+    "build:land-hex": "tsx scripts/buildLandHexCells.ts",
+    "build:terrain": "node scripts/buildLowPolyTerrain.mjs",
+    "fetch:landuse": "node scripts/fetchOsmLanduse.mjs"
   },
   "dependencies": {
     "@babel/core": "^7.29.0",
@@ -42,8 +45,10 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "babel-preset-expo": "~56.0.15",
+    "delaunator": "^5.1.0",
     "eslint": "^9.0.0",
     "eslint-config-expo": "~56.0.4",
+    "pngjs": "^7.0.0",
     "typescript": "~6.0.3",
     "vitest": "^3.2.6"
   },

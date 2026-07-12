@@ -60,6 +60,17 @@ export const colors = {
   park: ['#B7E2A8', '#CDE9C2', '#C6E6BB'] as const,
   gridLine: 'rgba(255,255,255,0.6)',
 
+  // Low-poly hex world (replaces the real basemap + cloud fog). Land is a board
+  // of extruded H3 tiles over a flat ocean; unexplored tiles are pale, explored
+  // tiles turn a lively mint and rise taller. Extrusion side walls are shaded by
+  // the map light from these top colors, so only top faces are specified here.
+  world: {
+    ocean: '#A9D3EE', // flat sea (map background)
+    landTop: '#D6D2C0', // unexplored land tile — faded, "unknown"
+    exploredTop: '#83D8AE', // explored tile — revealed, alive
+    hexEdge: 'rgba(44,47,96,0.14)', // subtle facet outline on tile tops
+  },
+
   // Location dot
   dotPulse: '#7B9CF0',
   dotCore: '#5C7CE0',

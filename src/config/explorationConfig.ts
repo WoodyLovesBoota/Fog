@@ -10,6 +10,16 @@
 /** H3 cell resolution. 10 ≈ ~125m cell edge (good for walking); 11 is finer. */
 export const H3_RESOLUTION = 10;
 
+/**
+ * VISUAL H3 resolution for the low-poly hex world drawn on screen. Deliberately
+ * COARSER than {@link H3_RESOLUTION}: res 8 ≈ ~460m edge (~0.7 km²) yields ~870
+ * chunky tiles over Singapore instead of ~40k slivers, which reads as a game
+ * board rather than pixel noise. Tracking still happens at res 10 — a visual
+ * tile lights up when any res-10 cell inside it is visited (see
+ * `visitedToVisualCells`). Change this → re-run `npm run build:land-hex`.
+ */
+export const VISUAL_H3_RESOLUTION = 8;
+
 /** Cumulative time in the same cell before it counts as "visited". */
 export const DWELL_THRESHOLD_MS = 20_000;
 

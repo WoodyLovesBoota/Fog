@@ -1,6 +1,5 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   AppState,
   BackHandler,
   Pressable,
@@ -14,25 +13,24 @@ import {
   Camera,
   type CameraRef,
   GeoJSONSource,
-  Images,
   Layer,
   Map as MapView,
   Marker,
   UserLocation,
 } from "@maplibre/maplibre-react-native";
+import type {
+  FillExtrusionLayerSpecification,
+  StyleSpecification,
+} from "@maplibre/maplibre-gl-style-spec";
 
-import { colors, fonts, press, shadows, type } from "@/theme/tokens";
-import { MAP_STYLE_URL, SINGAPORE_CENTER } from "@/config/mapConfig";
-import {
-  ensureSingaporePack,
-  type DownloadState,
-} from "@/map/downloadSingaporePack";
+import { colors, fonts, press, shadows } from "@/theme/tokens";
+import { SINGAPORE_CENTER } from "@/config/mapConfig";
 import {
   getCurrentPosition,
   getLastKnownPosition,
   getPermission,
 } from "@/services/location";
-import { fogMask } from "@/core/exploration/cellGeometry";
+import { TERRAIN_FC } from "@/data/lowPolyTerrainWorld";
 import { haversineMeters } from "@/core/exploration/distance";
 import { AsyncVisitedRepository } from "@/adapters/storage/VisitedRepository.async";
 import {
@@ -61,20 +59,52 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 const TOAST_MS = 1400;
 /** Window after a first back press in which a second press exits the app. */
 const BACK_EXIT_MS = 2000;
+
+/** Camera tilt (degrees) — enough to read the extruded terrain as a low-poly,
+    pseudo-isometric world. MapLibre uses a perspective camera (max ~60°), so
+    this is a tilted 2.5D view, not a true orthographic isometric projection. */
+const WORLD_PITCH = 55;
+/** Walking-scale zoom, used when following the user's real GPS. */
+const WORLD_ZOOM = 14.5;
+/** Whole-island overview — frames all of low-poly Singapore at once. */
+const OVERVIEW_ZOOM = 10.6;
+
+/** DEV PREVIEW — pin the camera on a whole-Singapore overview (ignore the
+    device's real GPS, which on an emulator isn't in Singapore) so the low-poly
+    island is what you see on launch. Set to false to restore real follow-me
+    GPS behaviour at walking zoom. */
+const PREVIEW_SINGAPORE = true;
+
 /** Static initial camera — hoisted so its reference is stable across renders.
     A new object literal here would break <Camera>'s memo every render. */
-const INITIAL_VIEW_STATE = { center: SINGAPORE_CENTER, zoom: 15 } as const;
-/** Seamless cloud texture tiled across the fog mask (registered via <Images>). */
-const CLOUD_TILE = require("../assets/cloud-tile.png");
-const CLOUD_IMAGE_ID = "fog-cloud";
-/** Static fog paint — hoisted so MapLibre doesn't re-apply the style each render.
-    `fill-pattern` paints the cloud texture instead of a flat color; the mask is
-    still one feature, so the cloud cover costs nothing per unexplored cell. */
-const FOG_PAINT = {
-  "fill-pattern": CLOUD_IMAGE_ID,
-  "fill-opacity": 0.7,
+const INITIAL_VIEW_STATE = {
+  center: SINGAPORE_CENTER,
+  zoom: PREVIEW_SINGAPORE ? OVERVIEW_ZOOM : WORLD_ZOOM,
+  pitch: WORLD_PITCH,
 } as const;
-const FOG_IMAGES = { [CLOUD_IMAGE_ID]: CLOUD_TILE } as const;
+
+/** Minimal basemap: a single flat ocean-colored background — no tiles, no
+    roads, no labels. The land is drawn entirely from our own baked low-poly
+    terrain mesh (GeoJSON layer below), so the app needs no map provider, no
+    API key, and no offline download — it renders fully offline out of the box. */
+const WORLD_STYLE: StyleSpecification = {
+  version: 8,
+  name: "fog-lowpoly",
+  sources: {},
+  layers: [
+    { id: "ocean", type: "background", paint: { "background-color": colors.world.ocean } },
+  ],
+};
+
+/** Terrain extrusion paint — everything is precomputed at build time: each
+    triangle carries its final `color` (elevation band × facet lighting) and
+    exaggerated height `h`, so the style just reads feature properties. */
+const TERRAIN_PAINT: FillExtrusionLayerSpecification["paint"] = {
+  "fill-extrusion-color": ["get", "color"],
+  "fill-extrusion-height": ["get", "h"],
+  "fill-extrusion-base": 0,
+  "fill-extrusion-opacity": 1,
+};
 
 /** One landmark beacon on the map. Memoized so the frequent screen re-renders
     (toast flashes, tracking toggles, sheet opens) never touch the native
@@ -171,27 +201,22 @@ const MapChrome = memo(function MapChrome({
 });
 
 /**
- * Real geographic map screen: MapLibre + Stadia tiles, gated behind a one-time
- * Singapore offline download. Once the pack is cached the map renders fully
- * offline.
+ * Low-poly Singapore map screen. There is no real basemap: the ocean is a flat
+ * background color and the land is a faceted terrain mesh recreated from the
+ * real coastline + real SRTM elevation, baked at build time
+ * (`scripts/buildLowPolyTerrain.mjs` → `lowPolyTerrainWorld`). No map provider,
+ * API key, or offline download — it renders fully offline from first launch.
  *
- * Fog-of-war: one big mask polygon always covers the whole region; each visited
- * H3 cell is punched out as a hole so the basemap shows through ("cloud
- * cleared"). Because the mask is a single feature, the fog never flickers or
- * "ends" as you pan/zoom — there's no viewport to recompute.
+ * Exploration STATE is still tracked and persisted exactly as before (res-10
+ * H3 cells via AsyncVisitedRepository); how it's VISUALIZED on this terrain is
+ * the next step — the old hex-tile reveal was dropped along with the cloud fog.
  *
- * Visited cells are persisted (AsyncVisitedRepository): on launch we restore
- * the fog and seed the engine so already-cleared cells don't re-fire, and each
- * new visit is written back.
- *
- * The map itself is untouched chrome; the design's overlay assets ride on top:
- * a hex progress badge, a reset button, a "new area" toast, a Stats pill, a
- * recenter FAB, and a tracking toggle.
+ * The design's overlay chrome rides on top: a hex progress badge, a "new area"
+ * toast, Collection/Stats pills, a recenter FAB, and a tracking toggle.
  */
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [dl, setDl] = useState<DownloadState>({ status: "idle" });
   const [visitedCells, setVisitedCells] = useState<string[]>([]);
   // 'background' = OS task running (works while away); 'foreground' = fallback
   // watcher (app open only); 'off' = paused.
@@ -202,7 +227,7 @@ export default function MapScreen() {
   const [toast, setToast] = useState<string | null>(null);
   // MapLibre drops camera commands until its style finishes loading, so the
   // initial recenter must wait for this flag (flipped by onDidFinishLoadingMap)
-  // rather than firing the instant the download completes.
+  // rather than firing the instant the screen mounts.
   const [mapReady, setMapReady] = useState(false);
 
   // Tapped landmark + its live distance from the user (meters), for the sheet.
@@ -228,9 +253,6 @@ export default function MapScreen() {
 
   // One persistence adapter for the whole screen lifetime.
   const repo = useMemo(() => new AsyncVisitedRepository(), []);
-
-  // Fog mask: rebuilt only when a cell is visited. Always covers the map.
-  const fogFC = useMemo(() => fogMask(visitedCells), [visitedCells]);
 
   // "N% of Singapore explored" — visited cells over the land-cell denominator.
   const progressPct = Math.min(
@@ -305,10 +327,6 @@ export default function MapScreen() {
     });
   }, []);
 
-  const startDownload = useCallback(() => {
-    void ensureSingaporePack(setDl);
-  }, []);
-
   // Hard permission gate: the map is unreachable without location access.
   // Whatever route led here, re-verify; if it's not granted, bounce to the
   // blocked screen instead of rendering the map. `null` = still checking.
@@ -324,12 +342,11 @@ export default function MapScreen() {
         return;
       }
       setAuthorized(true);
-      startDownload();
     })();
     return () => {
       cancelled = true;
     };
-  }, [router, startDownload]);
+  }, [router]);
 
   // Once authorized: subscribe to live visit events and restore the fog from
   // storage. We deliberately do NOT auto-start tracking here — the app launches
@@ -437,24 +454,32 @@ export default function MapScreen() {
   // immediately), then a fresh `getCurrentPosition` refines it. Only fires once
   // per mount, so the user can pan freely afterwards.
   //
-  // We gate on `mapReady` (not just dl.status): MapLibre silently ignores
-  // jumpTo/flyTo until its style has loaded, so firing the moment the download
-  // finishes would no-op and leave the camera stuck on the Singapore default —
-  // the user would then have to tap the recenter FAB to move at all.
+  // We gate on `mapReady`: MapLibre silently ignores jumpTo/flyTo until its
+  // style has loaded, so firing the moment the screen mounts would no-op and
+  // leave the camera stuck on the Singapore default — the user would then have
+  // to tap the recenter FAB to move at all. Pitch is preserved from the initial
+  // view state (we only move center/zoom here).
   useEffect(() => {
-    if (dl.status !== "done" || !mapReady) return;
+    // Preview mode keeps the camera pinned on Singapore (INITIAL_VIEW_STATE);
+    // don't chase the device GPS, which on an emulator isn't in Singapore.
+    if (!mapReady || PREVIEW_SINGAPORE) return;
     let cancelled = false;
     (async () => {
       const last = await getLastKnownPosition();
       if (!cancelled && last) {
-        cameraRef.current?.jumpTo({ center: [last.lng, last.lat], zoom: 15 });
+        cameraRef.current?.jumpTo({
+          center: [last.lng, last.lat],
+          zoom: WORLD_ZOOM,
+          pitch: WORLD_PITCH,
+        });
       }
       try {
         const pos = await getCurrentPosition();
         if (!cancelled) {
           cameraRef.current?.flyTo({
             center: [pos.lng, pos.lat],
-            zoom: 16,
+            zoom: WORLD_ZOOM,
+            pitch: WORLD_PITCH,
             duration: 500,
           });
         }
@@ -465,7 +490,7 @@ export default function MapScreen() {
     return () => {
       cancelled = true;
     };
-  }, [dl.status, mapReady]);
+  }, [mapReady]);
 
   // Bottom button: pause/resume tracking. Resume re-requests permission and
   // prefers the always-on background task; pause stops whichever driver is live.
@@ -577,11 +602,22 @@ export default function MapScreen() {
     if (recenteringRef.current) return;
     recenteringRef.current = true;
     try {
+      // Preview mode: recenter FAB snaps back to the whole-island overview.
+      if (PREVIEW_SINGAPORE) {
+        cameraRef.current?.flyTo({
+          center: SINGAPORE_CENTER,
+          zoom: OVERVIEW_ZOOM,
+          pitch: WORLD_PITCH,
+          duration: 900,
+        });
+        return;
+      }
       const last = await getLastKnownPosition();
       if (last) {
         cameraRef.current?.flyTo({
           center: [last.lng, last.lat],
-          zoom: 16,
+          zoom: WORLD_ZOOM,
+          pitch: WORLD_PITCH,
           duration: 900,
         });
       }
@@ -592,7 +628,8 @@ export default function MapScreen() {
         }
         cameraRef.current?.flyTo({
           center: [pos.lng, pos.lat],
-          zoom: 16,
+          zoom: WORLD_ZOOM,
+          pitch: WORLD_PITCH,
           duration: 900,
         });
       } catch (e) {
@@ -616,71 +653,43 @@ export default function MapScreen() {
     [insets.bottom]
   );
 
-  if (dl.status !== "done") {
+  // Until the permission check resolves, hold on a plain background (no spinner)
+  // so returning users don't get a flash. A denied result redirects to /denied.
+  if (authorized !== true) {
     return (
       <View
         style={[
           styles.center,
           { paddingTop: insets.top, paddingBottom: insets.bottom },
         ]}
-      >
-        {
-          dl.status === "error" ? (
-            <>
-              <Text style={styles.title}>Couldn't load the map</Text>
-              <Text style={styles.subtitle} numberOfLines={2}>
-                {dl.message}
-              </Text>
-              <Pressable
-                onPress={startDownload}
-                accessibilityRole="button"
-                accessibilityLabel="Download map again"
-                style={({ pressed }) => [styles.retry, pressed && press.chip]}
-              >
-                <Text style={styles.retryLabel}>Retry</Text>
-              </Pressable>
-            </>
-          ) : dl.status === "downloading" ? (
-            <>
-              <ActivityIndicator color={colors.blueDeep} />
-              <Text style={styles.subtitle}>
-                Preparing Singapore map… {Math.round(dl.progress)}%
-              </Text>
-            </>
-          ) : null /* 'idle': cache check in flight — show a plain background, not
-                    a spinner, so returning users don't get a "preparing" flash. */
-        }
-      </View>
+      />
     );
   }
 
   return (
     <View style={styles.page}>
-      {/* After download this renders from the offline cache. */}
+      {/* Low-poly hex world — no tiles, renders offline from our own geometry. */}
       <MapView
         style={styles.map}
-        mapStyle={MAP_STYLE_URL}
-        attribution
+        mapStyle={WORLD_STYLE}
         onDidFinishLoadingMap={() => setMapReady(true)}
       >
         <Camera ref={cameraRef} initialViewState={INITIAL_VIEW_STATE} />
         <UserLocation />
 
-        {/* Register the seamless cloud texture used by the fog fill-pattern. */}
-        <Images images={FOG_IMAGES} />
-
-        {/* Fog-of-war: one mask polygon covers the whole region, painted with a
-            tiled cloud texture; visited cells are punched out as holes, so the
-            basemap shows through there. */}
-        <GeoJSONSource id="fog-mask" data={fogFC}>
-          <Layer id="fog-fill" type="fill" paint={FOG_PAINT} />
+        {/* The recreated island: ~4.7k extruded low-poly triangles with baked
+            colors (real coastline + real elevation — Bukit Timah, the islands,
+            reservoirs' hills all read). Static geometry, so the source uploads
+            once and never rebuilds. */}
+        <GeoJSONSource id="terrain" data={TERRAIN_FC}>
+          <Layer id="terrain-mesh" type="fill-extrusion" paint={TERRAIN_PAINT} />
         </GeoJSONSource>
 
-        {/* Landmark beacons — native Markers sit ON TOP of the fog and stay
-            visible everywhere, names included. Anchored at the pin head; tapping
-            one opens the detail sheet. Only the 10 anchors + already-collected
-            landmarks are drawn; the undiscovered 90 are intentionally absent so
-            their location can't be read off the map. */}
+        {/* Landmark beacons — native Markers sit ON TOP of the terrain and
+            stay visible everywhere, names included. Anchored at the pin head;
+            tapping one opens the detail sheet. Only the 10 anchors + already-
+            collected landmarks are drawn; the undiscovered 90 are intentionally
+            absent so their location can't be read off the map. */}
         {visiblePins.map((lm) => (
           <PinMarker key={lm.id} landmark={lm} onSelect={openLandmark} />
         ))}
@@ -774,16 +783,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     backgroundColor: colors.phoneBg,
   },
-  title: { ...type.statsTitle, textAlign: "center" },
-  subtitle: { ...type.subtitle, textAlign: "center" },
-  retry: {
-    marginTop: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 22,
-    borderRadius: 999,
-    backgroundColor: colors.white,
-  },
-  retryLabel: { ...type.badge, color: colors.blueDeep },
   progressBadge: {
     position: "absolute",
     left: 20,
