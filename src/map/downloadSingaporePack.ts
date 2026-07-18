@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { OfflineManager } from '@maplibre/maplibre-react-native';
 
 import {
-  MAP_STYLE_URL,
+  PACK_STYLE_URL,
   SG_BOUNDS_SW,
   SG_BOUNDS_NE,
   OFFLINE_MIN_ZOOM,
@@ -62,7 +62,10 @@ export async function ensureSingaporePack(
   try {
     await OfflineManager.createPack(
       {
-        mapStyle: MAP_STYLE_URL,
+        // The hosted alidade_smooth URL, NOT the local lowpoly style: native
+        // createPack only takes a style URL. Same tile source either way, so
+        // the cached tiles serve the local style too (see PACK_STYLE_URL).
+        mapStyle: PACK_STYLE_URL,
         minZoom: OFFLINE_MIN_ZOOM,
         maxZoom: OFFLINE_MAX_ZOOM,
         bounds: [SG_BOUNDS_SW[0], SG_BOUNDS_SW[1], SG_BOUNDS_NE[0], SG_BOUNDS_NE[1]],

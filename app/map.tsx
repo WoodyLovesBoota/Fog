@@ -14,7 +14,6 @@ import {
   Camera,
   type CameraRef,
   GeoJSONSource,
-  Images,
   Layer,
   Map as MapView,
   Marker,
@@ -22,7 +21,13 @@ import {
 } from "@maplibre/maplibre-react-native";
 
 import { colors, fonts, press, shadows, type } from "@/theme/tokens";
-import { MAP_STYLE_URL, SINGAPORE_CENTER } from "@/config/mapConfig";
+import {
+  LOWPOLY_MAP_STYLE,
+  OFFLINE_MAX_ZOOM,
+  OFFLINE_MIN_ZOOM,
+  SINGAPORE_CENTER,
+} from "@/config/mapConfig";
+import { PALETTE } from "@/config/lowpolyPalette";
 import {
   ensureSingaporePack,
   type DownloadState,
@@ -62,19 +67,28 @@ const TOAST_MS = 1400;
 /** Window after a first back press in which a second press exits the app. */
 const BACK_EXIT_MS = 2000;
 /** Static initial camera — hoisted so its reference is stable across renders.
-    A new object literal here would break <Camera>'s memo every render. */
-const INITIAL_VIEW_STATE = { center: SINGAPORE_CENTER, zoom: 15 } as const;
-/** Seamless cloud texture tiled across the fog mask (registered via <Images>). */
-const CLOUD_TILE = require("../assets/cloud-tile.png");
-const CLOUD_IMAGE_ID = "fog-cloud";
-/** Static fog paint — hoisted so MapLibre doesn't re-apply the style each render.
-    `fill-pattern` paints the cloud texture instead of a flat color; the mask is
-    still one feature, so the cloud cover costs nothing per unexplored cell. */
-const FOG_PAINT = {
-  "fill-pattern": CLOUD_IMAGE_ID,
-  "fill-opacity": 0.7,
+    A new object literal here would break <Camera>'s memo every render.
+    pitch 60 is THE isometric-game viewpoint; with touchPitch/touchRotate
+    disabled on the MapView it can never drift, so every camera move after this
+    (jumpTo/flyTo set only center+zoom) keeps the same tilt and north-up bearing. */
+const INITIAL_VIEW_STATE = {
+  center: SINGAPORE_CENTER,
+  zoom: 15,
+  pitch: 60,
+  bearing: 0,
 } as const;
-const FOG_IMAGES = { [CLOUD_IMAGE_ID]: CLOUD_TILE } as const;
+/** Static fog paint — hoisted so MapLibre doesn't re-apply the style each render.
+    A flat pastel fill (not the old cloud texture) plus a line layer over the
+    same mask geometry: the line traces each punched-out hexagon hole, so
+    cleared cells read as crisp "unlocked tiles" against the fog. */
+const FOG_PAINT = {
+  "fill-color": PALETTE.fogFill,
+  "fill-opacity": 0.94,
+} as const;
+const FOG_LINE_PAINT = {
+  "line-color": PALETTE.fogLine,
+  "line-width": 1,
+} as const;
 
 /** One landmark beacon on the map. Memoized so the frequent screen re-renders
     (toast flashes, tracking toggles, sheet opens) never touch the native
@@ -454,7 +468,7 @@ export default function MapScreen() {
         if (!cancelled) {
           cameraRef.current?.flyTo({
             center: [pos.lng, pos.lat],
-            zoom: 16,
+            zoom: OFFLINE_MAX_ZOOM,
             duration: 500,
           });
         }
@@ -581,7 +595,7 @@ export default function MapScreen() {
       if (last) {
         cameraRef.current?.flyTo({
           center: [last.lng, last.lat],
-          zoom: 16,
+          zoom: OFFLINE_MAX_ZOOM,
           duration: 900,
         });
       }
@@ -592,7 +606,7 @@ export default function MapScreen() {
         }
         cameraRef.current?.flyTo({
           center: [pos.lng, pos.lat],
-          zoom: 16,
+          zoom: OFFLINE_MAX_ZOOM,
           duration: 900,
         });
       } catch (e) {
@@ -656,24 +670,35 @@ export default function MapScreen() {
 
   return (
     <View style={styles.page}>
-      {/* After download this renders from the offline cache. */}
+      {/* After download this renders from the offline cache (the local lowpoly
+          style reads the same tile source the pack downloaded). Pitch/rotate
+          gestures are off: the isometric viewpoint is part of the art style,
+          not a camera the user drives. */}
       <MapView
         style={styles.map}
-        mapStyle={MAP_STYLE_URL}
+        mapStyle={LOWPOLY_MAP_STYLE}
         attribution
+        touchPitch={false}
+        touchRotate={false}
         onDidFinishLoadingMap={() => setMapReady(true)}
       >
-        <Camera ref={cameraRef} initialViewState={INITIAL_VIEW_STATE} />
+        <Camera
+          ref={cameraRef}
+          initialViewState={INITIAL_VIEW_STATE}
+          minZoom={OFFLINE_MIN_ZOOM}
+          maxZoom={OFFLINE_MAX_ZOOM}
+        />
         <UserLocation />
 
-        {/* Register the seamless cloud texture used by the fog fill-pattern. */}
-        <Images images={FOG_IMAGES} />
-
-        {/* Fog-of-war: one mask polygon covers the whole region, painted with a
-            tiled cloud texture; visited cells are punched out as holes, so the
-            basemap shows through there. */}
+        {/* Fog-of-war: one mask polygon covers the whole region; visited cells
+            are punched out as holes, so the basemap shows through there. Both
+            layers ride the same source: the fill is the fog itself, the line
+            traces the hexagon hole edges ("unlocked tile" borders). Added via
+            JSX ⇒ appended above every style layer, so the fog covers the
+            building extrusions too. */}
         <GeoJSONSource id="fog-mask" data={fogFC}>
           <Layer id="fog-fill" type="fill" paint={FOG_PAINT} />
+          <Layer id="fog-line" type="line" paint={FOG_LINE_PAINT} />
         </GeoJSONSource>
 
         {/* Landmark beacons — native Markers sit ON TOP of the fog and stay
