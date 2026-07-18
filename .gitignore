@@ -40,3 +40,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Phase 2 prop-scatter OSM cache (intermediate build data, re-fetch via npm run build:osm-props)
+scripts/osm/

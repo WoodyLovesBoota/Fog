@@ -23,6 +23,14 @@ export type LandmarkCategory =
   | "shopping" // malls, markets, Orchard
   | "religious"; // temples, mosques, churches, shrines
 
+/**
+ * Phase-2 map prominence tier. 'S' = the marquee sights (largest icon, exempt
+ * from collision-hiding), 'A' = standard, 'B' = minor. DRAFT: all 100 are 'A'
+ * for now (the field is left unset on every entry below and defaulted by
+ * {@link landmarkTier}); the real S/A/B split lands in a later pass.
+ */
+export type LandmarkTier = "S" | "A" | "B";
+
 /** Singapore planning area / neighborhood — the "Region" info row value. */
 export type LandmarkArea =
   | "Marina Bay"
@@ -73,6 +81,19 @@ export type Landmark = {
   /** Display name (English). */
   name: string;
   category: LandmarkCategory;
+  /**
+   * Phase-2 map prominence tier — drives the SymbolLayer's icon-size, draw
+   * order, and overlap behaviour. DRAFT: left unset on every landmark so it
+   * defaults to 'A'. Always read it via {@link landmarkTier}, never `l.tier`
+   * directly, so the default applies.
+   */
+  tier?: LandmarkTier;
+  /**
+   * SymbolLayer image key. Defaults to `id`: every landmark's marker art is
+   * `assets/landmarks/<id>.webp` — the same file the detail sheet uses as its
+   * hero photo — registered under this key. Read via {@link landmarkIconKey}.
+   */
+  iconKey?: string;
   /**
    * Anchor landmarks (the 10 most iconic) are drawn on the map from the very
    * first launch. The other 90 are HIDDEN — their pin (and coordinate) must
@@ -1593,3 +1614,18 @@ export const ANCHORS: Landmark[] = ALL_LANDMARKS.filter((l) => l.isAnchor);
 
 /** How many landmarks stay hidden until discovered (the 90). The counter's denominator. */
 export const TOTAL_HIDDEN = ALL_LANDMARKS.length - ANCHORS.length;
+
+/** A landmark's prominence tier, defaulting to the Phase-2 draft value 'A'. */
+export const landmarkTier = (l: Landmark): LandmarkTier => l.tier ?? "A";
+
+/** The SymbolLayer image key for a landmark — its `id` unless explicitly set. */
+export const landmarkIconKey = (l: Landmark): string => l.iconKey ?? l.id;
+
+/**
+ * id → landmark, for resolving a tapped map symbol back to its record. The
+ * SymbolLayer carries only the id in feature properties; this is the reverse
+ * lookup the press handler uses (see LandmarkSymbols).
+ */
+export const LANDMARK_BY_ID: ReadonlyMap<string, Landmark> = new Map(
+  ALL_LANDMARKS.map((l) => [l.id, l]),
+);

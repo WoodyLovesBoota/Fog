@@ -10,7 +10,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "test": "vitest run",
-    "build:land-cells": "tsx scripts/buildLandCells.ts"
+    "build:land-cells": "tsx scripts/buildLandCells.ts",
+    "build:osm-props": "tsx scripts/fetchOsmProps.ts",
+    "build:props": "tsx scripts/buildProps.ts"
   },
   "dependencies": {
     "@babel/core": "^7.29.0",

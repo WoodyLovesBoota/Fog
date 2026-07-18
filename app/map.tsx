@@ -10,21 +10,25 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import type { NativeSyntheticEvent } from "react-native";
 import {
   Camera,
   type CameraRef,
   GeoJSONSource,
   Layer,
   Map as MapView,
-  Marker,
   UserLocation,
+  type ViewStateChangeEvent,
 } from "@maplibre/maplibre-react-native";
 
 import { colors, fonts, press, shadows, type } from "@/theme/tokens";
 import {
+  CAMERA_MAX_ZOOM,
+  CAMERA_MIN_ZOOM,
+  DEFAULT_PITCH,
+  DEFAULT_ZOOM,
   LOWPOLY_MAP_STYLE,
-  OFFLINE_MAX_ZOOM,
-  OFFLINE_MIN_ZOOM,
+  pitchForZoom,
   SINGAPORE_CENTER,
 } from "@/config/mapConfig";
 import { PALETTE } from "@/config/lowpolyPalette";
@@ -49,7 +53,8 @@ import {
 } from "@/adapters/location/backgroundTracking";
 import { locationEvents } from "@/core/exploration/locationEvents";
 import { TOTAL_LAND_CELLS } from "@/data/singaporeLandCells";
-import { LandmarkPin } from "@/features/map/LandmarkPin";
+import { LandmarkSymbols } from "@/features/map/LandmarkSymbols";
+import { PropSymbols } from "@/features/map/PropSymbols";
 import { LANDMARKS, type Landmark } from "@/features/poi/landmarks";
 import { newlyDiscovered } from "@/features/poi/discovery";
 import { loadCollected, addCollected } from "@/adapters/storage/collectedRepo";
@@ -58,6 +63,7 @@ import { LandmarkSheet } from "@/components/LandmarkSheet";
 import { CollectModal } from "@/components/CollectModal";
 import { MultiDiscoverySheet } from "@/components/MultiDiscoverySheet";
 import { Hexagon } from "@/components/Hexagon";
+import { Vignette } from "@/components/Vignette";
 import { LiveSignal } from "@/components/LiveSignal";
 import { BarsIcon, CrosshairIcon } from "@/components/icons";
 import { Toast } from "@/components/Toast";
@@ -68,52 +74,39 @@ const TOAST_MS = 1400;
 const BACK_EXIT_MS = 2000;
 /** Static initial camera — hoisted so its reference is stable across renders.
     A new object literal here would break <Camera>'s memo every render.
-    pitch 60 is THE isometric-game viewpoint; with touchPitch/touchRotate
-    disabled on the MapView it can never drift, so every camera move after this
-    (jumpTo/flyTo set only center+zoom) keeps the same tilt and north-up bearing. */
+    DEFAULT_ZOOM+DEFAULT_PITCH is THE flat-board viewpoint: a few blocks on a
+    board tilted 42°. touchPitch/touchRotate are disabled on the MapView, so
+    the user never drives the tilt directly — pitch is a pure function of zoom
+    (see the onRegionIsChanging handler), flattening toward top-down as you
+    zoom out so no horizon/vista ever enters the frame. */
 const INITIAL_VIEW_STATE = {
   center: SINGAPORE_CENTER,
-  zoom: 15,
-  pitch: 60,
+  zoom: DEFAULT_ZOOM,
+  pitch: DEFAULT_PITCH,
   bearing: 0,
 } as const;
 /** Static fog paint — hoisted so MapLibre doesn't re-apply the style each render.
     A flat pastel fill (not the old cloud texture) plus a line layer over the
     same mask geometry: the line traces each punched-out hexagon hole, so
-    cleared cells read as crisp "unlocked tiles" against the fog. */
+    cleared cells read as crisp "unlocked tiles" against the fog.
+
+    OPACITY IS THE LOAD-BEARING NUMBER (Phase 2-5). The mask covers the WHOLE
+    region until you've walked somewhere (cellGeometry.fogMask), so at 0%
+    explored the fill IS the entire screen. At the old 0.94 that meant a blank
+    cream board — no grass, no roads, no diorama, just faint road ghosts — which
+    is exactly how the CBD default camera opened once Phase 1 moved
+    SINGAPORE_CENTER off the (already-cleared) old centroid. 0.60 keeps fogged
+    ground clearly "misted over" while the board still reads through it, so a
+    fresh install still looks like a diorama. Cleared cells are holes — 100%
+    crisp — so the explored/unexplored contrast survives the lower opacity. */
 const FOG_PAINT = {
   "fill-color": PALETTE.fogFill,
-  "fill-opacity": 0.94,
+  "fill-opacity": 0.6,
 } as const;
 const FOG_LINE_PAINT = {
   "line-color": PALETTE.fogLine,
   "line-width": 1,
 } as const;
-
-/** One landmark beacon on the map. Memoized so the frequent screen re-renders
-    (toast flashes, tracking toggles, sheet opens) never touch the native
-    markers: with a stable `onSelect`, every prop here is reference-equal
-    across renders, so MapLibre re-syncs a marker only when the landmark set
-    itself changes. The inline closure below is safe — it's inside the memo
-    boundary, recreated only when this component actually re-renders. */
-const PinMarker = memo(function PinMarker({
-  landmark,
-  onSelect,
-}: {
-  landmark: Landmark;
-  onSelect: (lm: Landmark) => void;
-}) {
-  return (
-    <Marker
-      id={landmark.id}
-      lngLat={[landmark.lng, landmark.lat]}
-      anchor="top"
-      onPress={() => onSelect(landmark)}
-    >
-      <LandmarkPin landmark={landmark} />
-    </Marker>
-  );
-});
 
 /** The static overlay chrome: Collection/Stats pills + recenter FAB. Memoized
     with stable callbacks so the screen's frequent re-renders (toast flashes,
@@ -214,10 +207,6 @@ export default function MapScreen() {
   >("off");
   const tracking = trackingMode !== "off";
   const [toast, setToast] = useState<string | null>(null);
-  // MapLibre drops camera commands until its style finishes loading, so the
-  // initial recenter must wait for this flag (flipped by onDidFinishLoadingMap)
-  // rather than firing the instant the download completes.
-  const [mapReady, setMapReady] = useState(false);
 
   // Tapped landmark + its live distance from the user (meters), for the sheet.
   const [selected, setSelected] = useState<Landmark | null>(null);
@@ -262,6 +251,23 @@ export default function MapScreen() {
 
   const cameraRef = useRef<CameraRef>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Flat-board invariant: pitch is a pure function of zoom (42° at rest,
+  // flattening to 30° by CAMERA_MIN_ZOOM) so zooming out can never reveal the
+  // horizon/far vista. touchPitch is off, so the user can't fight this — the
+  // only pitch driver besides our own flyTo/jumpTo calls is this handler. It
+  // rides the continuous region event and nudges pitch (duration 0) whenever
+  // the actual tilt drifts >0.5° from the ramp; the threshold keeps the bridge
+  // quiet during pure pans, where zoom (and thus target pitch) never changes.
+  const syncPitchToZoom = useCallback(
+    (e: NativeSyntheticEvent<ViewStateChangeEvent>) => {
+      const { zoom, pitch } = e.nativeEvent;
+      const target = pitchForZoom(zoom);
+      if (Math.abs(target - pitch) < 0.5) return;
+      void cameraRef.current?.setStop({ pitch: target, duration: 0 });
+    },
+    []
+  );
   // Mirrors "is a tracking session active?" for the AppState listener, which must
   // read it without re-subscribing on every toggle.
   const trackingRef = useRef(false);
@@ -445,41 +451,12 @@ export default function MapScreen() {
     return () => sub.remove();
   }, [repo]);
 
-  // Snap the camera onto the user as soon as the map is up. We don't wait for
-  // the engine's slow high-accuracy first lock: `getLastKnownPosition` returns
-  // the OS-cached fix instantly (so the map jumps off the Singapore default
-  // immediately), then a fresh `getCurrentPosition` refines it. Only fires once
-  // per mount, so the user can pan freely afterwards.
-  //
-  // We gate on `mapReady` (not just dl.status): MapLibre silently ignores
-  // jumpTo/flyTo until its style has loaded, so firing the moment the download
-  // finishes would no-op and leave the camera stuck on the Singapore default —
-  // the user would then have to tap the recenter FAB to move at all.
-  useEffect(() => {
-    if (dl.status !== "done" || !mapReady) return;
-    let cancelled = false;
-    (async () => {
-      const last = await getLastKnownPosition();
-      if (!cancelled && last) {
-        cameraRef.current?.jumpTo({ center: [last.lng, last.lat], zoom: 15 });
-      }
-      try {
-        const pos = await getCurrentPosition();
-        if (!cancelled) {
-          cameraRef.current?.flyTo({
-            center: [pos.lng, pos.lat],
-            zoom: OFFLINE_MAX_ZOOM,
-            duration: 500,
-          });
-        }
-      } catch (e) {
-        console.warn("initial center failed", e);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [dl.status, mapReady]);
+  // The map deliberately OPENS on the Singapore CBD (INITIAL_VIEW_STATE, north
+  // up) and stays there — we no longer auto-snap the camera to the user's GPS on
+  // launch. That keeps the CBD's props + anchor landmarks in frame as the
+  // default view (and avoids flying off to an out-of-Singapore dev/simulator
+  // fix, which would land on empty, prop-less map). The user pulls the camera
+  // onto themselves on demand via the recenter FAB (see `recenter`).
 
   // Bottom button: pause/resume tracking. Resume re-requests permission and
   // prefers the always-on background task; pause stops whichever driver is live.
@@ -595,7 +572,8 @@ export default function MapScreen() {
       if (last) {
         cameraRef.current?.flyTo({
           center: [last.lng, last.lat],
-          zoom: OFFLINE_MAX_ZOOM,
+          zoom: DEFAULT_ZOOM,
+          pitch: DEFAULT_PITCH,
           duration: 900,
         });
       }
@@ -606,7 +584,8 @@ export default function MapScreen() {
         }
         cameraRef.current?.flyTo({
           center: [pos.lng, pos.lat],
-          zoom: OFFLINE_MAX_ZOOM,
+          zoom: DEFAULT_ZOOM,
+          pitch: DEFAULT_PITCH,
           duration: 900,
         });
       } catch (e) {
@@ -680,36 +659,51 @@ export default function MapScreen() {
         attribution
         touchPitch={false}
         touchRotate={false}
-        onDidFinishLoadingMap={() => setMapReady(true)}
+        onRegionIsChanging={syncPitchToZoom}
+        onRegionDidChange={syncPitchToZoom}
       >
+        {/* Camera zoom envelope is deliberately NARROW (13–17, not the offline
+            pack's 8–15): min 13 hard-stops zoom-out at "a district" so the map
+            always reads as a toy diorama, and 16–17 stays offline-safe because
+            vector tiles overscale — z15 pack tiles render crisply past 15. */}
         <Camera
           ref={cameraRef}
           initialViewState={INITIAL_VIEW_STATE}
-          minZoom={OFFLINE_MIN_ZOOM}
-          maxZoom={OFFLINE_MAX_ZOOM}
+          minZoom={CAMERA_MIN_ZOOM}
+          maxZoom={CAMERA_MAX_ZOOM}
         />
         <UserLocation />
 
+        {/* Prop sprites — clay trees / houses / buildings scattered at build
+            time (Phase 2-4). Internal order 나무 < house < building. Static;
+            not tappable. */}
+        <PropSymbols />
+
+        {/* Landmark markers — a SymbolLayer of the landmark photos (Phase 2-2).
+            Only the 10 anchors + already-collected landmarks enter the source,
+            so the undiscovered 90 never render (no-spoiler). Tap → detail
+            sheet. */}
+        <LandmarkSymbols pins={visiblePins} onSelect={openLandmark} />
+
         {/* Fog-of-war: one mask polygon covers the whole region; visited cells
-            are punched out as holes, so the basemap shows through there. Both
+            are punched out as holes, so the board shows through there. Both
             layers ride the same source: the fill is the fog itself, the line
-            traces the hexagon hole edges ("unlocked tile" borders). Added via
-            JSX ⇒ appended above every style layer, so the fog covers the
-            building extrusions too. */}
+            traces the hexagon hole edges ("unlocked tile" borders). Mounted
+            LAST — topmost, over the props and landmarks — which is the Phase 2-4
+            stack: 베이스맵 < 나무 < house < building < 랜드마크 < fog. So a prop
+            or pin in unexplored ground is misted over with everything else and
+            only sharpens once you clear its cell; walking somewhere is what
+            reveals it. This only works because FOG_PAINT is semi-transparent —
+            at the old 0.94 this order buried the entire diorama (see there). */}
         <GeoJSONSource id="fog-mask" data={fogFC}>
           <Layer id="fog-fill" type="fill" paint={FOG_PAINT} />
           <Layer id="fog-line" type="line" paint={FOG_LINE_PAINT} />
         </GeoJSONSource>
-
-        {/* Landmark beacons — native Markers sit ON TOP of the fog and stay
-            visible everywhere, names included. Anchored at the pin head; tapping
-            one opens the detail sheet. Only the 10 anchors + already-collected
-            landmarks are drawn; the undiscovered 90 are intentionally absent so
-            their location can't be read off the map. */}
-        {visiblePins.map((lm) => (
-          <PinMarker key={lm.id} landmark={lm} onSelect={openLandmark} />
-        ))}
       </MapView>
+
+      {/* Clay-texture vignette (Phase 1.13): soft corner shade over the map,
+          under all HUD/buttons. pointerEvents none — map gestures pass through. */}
+      <Vignette />
 
       {/* Progress badge (top-left): hex meter + "% explored". */}
       <View

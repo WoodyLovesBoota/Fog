@@ -2,7 +2,7 @@
   "version": 8,
   "name": "Fog Lowpoly",
   "metadata": {
-    "fog:note": "Forked from Stadia alidade_smooth. Labels/POIs/boundaries/railways stripped; colors come from src/config/lowpolyPalette.ts (PALETTE is the single source of truth — keep hexes in sync). {STADIA_API_KEY} is substituted at runtime by mapConfig.ts."
+    "fog:note": "Forked from Stadia alidade_smooth. GRASS board (Phase 1.8) then EXTREME DECLUTTER (Phase 1.9/1.10) then FOREST→SPRITE (Phase 1.12). Line families: ROADS and the COASTLINE are the only VISIBLE strokes. Phase 1.11 also adds same-color 'rounding' outlines (line-color == the fill's own hex, round cap+join, z13 4px→z16 12px) on the greens (landuse_residential_round #9AD483; landcover_park_round #57A951) and water (water_round #4FB2E5): because each stroke is drawn in its own fill's color, tile-seam and interior-boundary segments stay invisible, while the round join fattens+rounds every convex corner where the polygon meets a DIFFERENT color (grass vs background, water vs land) and the line thickness fills small concave notches — a pure-style fake bevel with no real geometry change. First-attempt widths, screenshot-tunable. Colors come from src/config/lowpolyPalette.ts (PALETTE is the single source of truth — keep hexes in sync). {STADIA_API_KEY} is substituted at runtime by mapConfig.ts. Ground: background grassBase, lighter residential/commercial landuse (grassLight), darker leisure-park landcover ONLY (grassDark, landcover subclass=park). Phase 1.12 RETIRED the organic dark-green blobs — park source-layer (nature_reserve/national_park, e.g. Bukit Timah) and landcover class=wood (forest) are NO LONGER drawn: their jagged real boundaries bloated under the Phase 1.11 round-outline trick and dominated the frame, so they now fall through to grassBase and will read as forest via dense tree sprites in Phase 2 (see src/config/buildProps.ts), not as a darker fill. Water is a polygon fill only — waterway LINES (stream/canal/drain/river) are GONE; major rivers survive as water polygons. Small water (swimming_pool) hidden below z16. Paved special ground kept as fills: parking, pedestrian plaza, sand. Buildings: flat terracotta-roof fills (z14+), governed by BUILDINGS_VISIBLE in mapConfig.ts (not by this file's declutter rules). ROADS (Phase 1.10): ONE flat color (roadFill #CDD1D6), round cap+join so intersections merge seamlessly — NO casing, NO dashed centerline, NO per-grade tint. Exactly two width tiers: road_major (motorway/trunk/primary/secondary) z13 3px→z16 10px; road_local (tertiary/minor) from z14.5, z16 5px. Ramps/links (ramp=1), service, track, unclassified, railway all removed. Removed vs Phase 1.8: waterway, park/landcover outlines, landuse_sports, road casings, road_centerline, railway base+ties. Removed in Phase 1.12: park_fill + park_round (nature_reserve/national_park), landcover_wood (forest), and the wood arm of the former landcover_green_round (renamed landcover_park_round, now subclass=park only). Layer order bottom→top; fills first, then each *_round outline sits directly above its OWN fill (so later fills — water, buildings — still paint over it), and coastline + roads are the only strokes that read as lines, sitting on top. CLAY TEXTURE PASS (Phase 1.13): a single top-left light source, so every drop shadow offsets toward bottom-right [+2.5,+3] in VIEWPORT space (screen-fixed under pitch, never map-space). (1) Road drop shadows: road_local_shadow/road_major_shadow are duplicates of their road, drawn directly BELOW it, line-color grassShadow #5E9B4E (shadow on grass = a darker grass tone, NEVER black), same width, line-translate [2.5,3] anchor=viewport, opacity 0.55 as a blur stand-in — the road lifts off the grass as a laid-on ribbon. (3) Water cliff replaces the old flat waterEdge coastline with a 2-line edge: water_cliff (cream #F3EAD5 = cliffEdge, z13 2px→z16 6px) rides the boundary, water_cliff_shadow (#2E86B8 waterCliffShadow, width +2px, line-offset pushed into the water, opacity 0.35) sits under+outside it — land reads as raised above a lower water plane. line-offset SIGN is screenshot-tunable: if the dark band lands on the LAND side, negate the offset stops. (2) landcover_park_shadow duplicates the park fill BELOW it, fill-color #5E9B4E, fill-translate [2.5,3] anchor=viewport, opacity 0.5. CAVEAT: landcover_park_round (grassDark bevel, up to 6px/side at z16) can overhang and swallow the ~3px park shadow at high zoom — if it reads invisible on screenshot, widen the offset or trim park_round. (4) Vignette is an RN overlay (src/components/Vignette.tsx), NOT a style layer. (5) grass noise texture: SKIPPED (low payoff vs sprite-registration cost)."
   },
   "sources": {
     "openmaptiles": {
@@ -18,29 +18,73 @@
       "id": "background",
       "type": "background",
       "paint": {
-        "background-color": "#EFE7D3"
+        "background-color": "#7FC46B"
       }
     },
     {
-      "id": "park_fill",
+      "id": "landuse_residential",
       "type": "fill",
       "source": "openmaptiles",
-      "source-layer": "park",
-      "filter": ["==", "$type", "Polygon"],
+      "source-layer": "landuse",
+      "filter": [
+        "all",
+        ["==", "$type", "Polygon"],
+        ["in", "class", "residential", "commercial", "retail", "neighbourhood", "suburb"]
+      ],
       "paint": {
-        "fill-color": "#A8D5A2"
+        "fill-color": "#9AD483"
       }
     },
     {
-      "id": "landcover_wood",
+      "id": "landuse_residential_round",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "landuse",
+      "filter": [
+        "all",
+        ["==", "$type", "Polygon"],
+        ["in", "class", "residential", "commercial", "retail", "neighbourhood", "suburb"]
+      ],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#9AD483",
+        "line-width": { "stops": [[13, 4], [16, 12]] }
+      }
+    },
+    {
+      "id": "landuse_parking",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landuse",
+      "minzoom": 14,
+      "filter": ["all", ["==", "$type", "Polygon"], ["==", "class", "parking"]],
+      "paint": {
+        "fill-color": "#DDD8CC"
+      }
+    },
+    {
+      "id": "landcover_sand",
       "type": "fill",
       "source": "openmaptiles",
       "source-layer": "landcover",
       "minzoom": 10,
-      "filter": ["all", ["==", "$type", "Polygon"], ["==", "class", "wood"]],
+      "filter": ["all", ["==", "$type", "Polygon"], ["==", "class", "sand"]],
       "paint": {
-        "fill-color": "#8FC489",
-        "fill-opacity": { "base": 1, "stops": [[10, 0], [12, 1]] }
+        "fill-color": "#EFDFB8"
+      }
+    },
+    {
+      "id": "landcover_park_shadow",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "minzoom": 10,
+      "filter": ["all", ["==", "$type", "Polygon"], ["==", "subclass", "park"]],
+      "paint": {
+        "fill-color": "#5E9B4E",
+        "fill-translate": [2.5, 3],
+        "fill-translate-anchor": "viewport",
+        "fill-opacity": 0.5
       }
     },
     {
@@ -51,8 +95,21 @@
       "minzoom": 10,
       "filter": ["all", ["==", "$type", "Polygon"], ["==", "subclass", "park"]],
       "paint": {
-        "fill-color": "#A8D5A2",
+        "fill-color": "#57A951",
         "fill-opacity": { "base": 1, "stops": [[10, 0], [12, 1]] }
+      }
+    },
+    {
+      "id": "landcover_park_round",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "landcover",
+      "minzoom": 10,
+      "filter": ["all", ["==", "$type", "Polygon"], ["==", "subclass", "park"]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#57A951",
+        "line-width": { "stops": [[13, 4], [16, 12]] }
       }
     },
     {
@@ -60,25 +117,113 @@
       "type": "fill",
       "source": "openmaptiles",
       "source-layer": "water",
-      "filter": ["==", "$type", "Polygon"],
+      "filter": ["all", ["==", "$type", "Polygon"], ["!=", "class", "swimming_pool"]],
       "paint": {
         "fill-antialias": true,
-        "fill-color": { "stops": [[10, "#6BBBDA"], [12, "#7EC8E3"]] }
+        "fill-color": { "stops": [[10, "#3FA6DC"], [12, "#4FB2E5"]] }
       }
     },
     {
-      "id": "waterway",
+      "id": "water_round",
       "type": "line",
       "source": "openmaptiles",
-      "source-layer": "waterway",
-      "filter": ["==", "$type", "LineString"],
+      "source-layer": "water",
+      "filter": ["all", ["==", "$type", "Polygon"], ["!=", "class", "swimming_pool"]],
+      "layout": { "line-cap": "round", "line-join": "round" },
       "paint": {
-        "line-color": "#7EC8E3",
-        "line-width": { "base": 1.3, "stops": [[13, 1], [18, 4]] }
+        "line-color": "#4FB2E5",
+        "line-width": { "stops": [[13, 4], [16, 12]] }
       }
     },
     {
-      "id": "road_minor_casing",
+      "id": "water_pool",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "minzoom": 16,
+      "filter": ["all", ["==", "$type", "Polygon"], ["==", "class", "swimming_pool"]],
+      "paint": {
+        "fill-antialias": true,
+        "fill-color": "#4FB2E5"
+      }
+    },
+    {
+      "id": "pedestrian_area",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 14,
+      "filter": ["all", ["==", "$type", "Polygon"], ["==", "subclass", "pedestrian"]],
+      "paint": {
+        "fill-color": "#F3EAD5"
+      }
+    },
+    {
+      "id": "building",
+      "type": "fill",
+      "source": "openmaptiles",
+      "source-layer": "building",
+      "minzoom": 14,
+      "filter": ["==", "$type", "Polygon"],
+      "paint": {
+        "fill-color": [
+          "case",
+          ["==", ["%", ["to-number", ["id"], 0], 2], 0],
+          "#E0714F",
+          "#E8895F"
+        ],
+        "fill-opacity": { "base": 1, "stops": [[14, 0], [14.5, 1]] }
+      }
+    },
+    {
+      "id": "water_cliff_shadow",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "filter": ["all", ["==", "$type", "Polygon"], ["!=", "class", "swimming_pool"]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#2E86B8",
+        "line-width": { "stops": [[13, 4], [16, 8]] },
+        "line-offset": { "stops": [[13, 2], [16, 5]] },
+        "line-opacity": 0.35
+      }
+    },
+    {
+      "id": "water_cliff",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "water",
+      "filter": ["all", ["==", "$type", "Polygon"], ["!=", "class", "swimming_pool"]],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#F3EAD5",
+        "line-width": { "stops": [[13, 2], [16, 6]] }
+      }
+    },
+    {
+      "id": "road_local_shadow",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 14.5,
+      "filter": [
+        "all",
+        ["==", "$type", "LineString"],
+        ["in", "class", "tertiary", "minor"],
+        ["!=", "ramp", 1]
+      ],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#5E9B4E",
+        "line-width": { "stops": [[14.5, 2], [16, 5]] },
+        "line-translate": [2.5, 3],
+        "line-translate-anchor": "viewport",
+        "line-opacity": 0.55
+      }
+    },
+    {
+      "id": "road_major_shadow",
       "type": "line",
       "source": "openmaptiles",
       "source-layer": "transportation",
@@ -86,46 +231,34 @@
       "filter": [
         "all",
         ["==", "$type", "LineString"],
-        ["in", "class", "minor", "service", "track"]
-      ],
-      "layout": { "line-cap": "butt", "line-join": "miter" },
-      "paint": {
-        "line-color": "#C7C2B4",
-        "line-width": { "base": 1.55, "stops": [[13, 2.5], [18, 11]] }
-      }
-    },
-    {
-      "id": "road_major_casing",
-      "type": "line",
-      "source": "openmaptiles",
-      "source-layer": "transportation",
-      "minzoom": 6,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk", "primary", "secondary", "tertiary"]
-      ],
-      "layout": { "line-cap": "butt", "line-join": "miter" },
-      "paint": {
-        "line-color": "#C7C2B4",
-        "line-width": { "base": 1.4, "stops": [[5.8, 0], [6, 3], [12, 4.5], [20, 32]] }
-      }
-    },
-    {
-      "id": "road_minor",
-      "type": "line",
-      "source": "openmaptiles",
-      "source-layer": "transportation",
-      "minzoom": 8,
-      "filter": [
-        "all",
-        ["==", "$type", "LineString"],
-        ["in", "class", "minor", "service", "track"]
+        ["in", "class", "motorway", "trunk", "primary", "secondary"],
+        ["!=", "ramp", 1]
       ],
       "layout": { "line-cap": "round", "line-join": "round" },
       "paint": {
-        "line-color": "#DBD6CA",
-        "line-width": { "base": 1.55, "stops": [[13, 1], [18, 8]] }
+        "line-color": "#5E9B4E",
+        "line-width": { "stops": [[13, 3], [16, 10]] },
+        "line-translate": [2.5, 3],
+        "line-translate-anchor": "viewport",
+        "line-opacity": 0.55
+      }
+    },
+    {
+      "id": "road_local",
+      "type": "line",
+      "source": "openmaptiles",
+      "source-layer": "transportation",
+      "minzoom": 14.5,
+      "filter": [
+        "all",
+        ["==", "$type", "LineString"],
+        ["in", "class", "tertiary", "minor"],
+        ["!=", "ramp", 1]
+      ],
+      "layout": { "line-cap": "round", "line-join": "round" },
+      "paint": {
+        "line-color": "#CDD1D6",
+        "line-width": { "stops": [[14.5, 2], [16, 5]] }
       }
     },
     {
@@ -133,37 +266,17 @@
       "type": "line",
       "source": "openmaptiles",
       "source-layer": "transportation",
-      "minzoom": 6,
+      "minzoom": 13,
       "filter": [
         "all",
         ["==", "$type", "LineString"],
-        ["in", "class", "motorway", "trunk", "primary", "secondary", "tertiary"]
+        ["in", "class", "motorway", "trunk", "primary", "secondary"],
+        ["!=", "ramp", 1]
       ],
       "layout": { "line-cap": "round", "line-join": "round" },
       "paint": {
-        "line-color": "#E8E3D6",
-        "line-width": { "base": 1.4, "stops": [[4, 1.5], [6, 1.3], [12, 3], [20, 28]] }
-      }
-    },
-    {
-      "id": "building",
-      "type": "fill-extrusion",
-      "source": "openmaptiles",
-      "source-layer": "building",
-      "minzoom": 13,
-      "filter": ["==", "$type", "Polygon"],
-      "paint": {
-        "fill-extrusion-color": "#F6F1E5",
-        "fill-extrusion-height": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          13,
-          0,
-          14,
-          ["coalesce", ["get", "render_height"], 8]
-        ],
-        "fill-extrusion-vertical-gradient": false
+        "line-color": "#CDD1D6",
+        "line-width": { "stops": [[13, 3], [16, 10]] }
       }
     }
   ]
