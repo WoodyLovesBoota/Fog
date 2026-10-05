@@ -8,6 +8,16 @@
  * `EXPO_PUBLIC_` prefix is what makes it readable from JS in an Expo build.
  */
 
+/**
+ * Which surface draws the map (see `features/map/MapSurface`):
+ *  - `diorama`  — the hand-built 3D island. Ships inside the app: no tiles, no
+ *                 API key, no download step. The default.
+ *  - `maplibre` — street-level Stadia tiles, behind the one-time offline
+ *                 download. Set `EXPO_PUBLIC_MAP_RENDERER=maplibre` to use it.
+ */
+export const MAP_RENDERER: 'diorama' | 'maplibre' =
+  process.env.EXPO_PUBLIC_MAP_RENDERER === 'maplibre' ? 'maplibre' : 'diorama';
+
 export const STADIA_API_KEY = process.env.EXPO_PUBLIC_STADIA_KEY ?? '';
 
 /**

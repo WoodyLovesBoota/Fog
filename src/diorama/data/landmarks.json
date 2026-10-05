@@ -1,0 +1,1869 @@
+{
+ "atlas": {
+  "width": 2560,
+  "height": 2560
+ },
+ "categories": {
+  "food": {
+   "color": "#F2A65A",
+   "emoji": "🍜",
+   "label": "Food",
+   "tintA": "#FBEBD8",
+   "tintB": "#F6DCC0"
+  },
+  "landmark": {
+   "color": "#5C8FE0",
+   "emoji": "📍",
+   "label": "Landmark",
+   "tintA": "#DCE8FB",
+   "tintB": "#C9DBF7"
+  },
+  "nature": {
+   "color": "#6FBF73",
+   "emoji": "🌳",
+   "label": "Nature",
+   "tintA": "#DFF3E2",
+   "tintB": "#CDEBD2"
+  },
+  "culture": {
+   "color": "#9E91E0",
+   "emoji": "🏛️",
+   "label": "Culture",
+   "tintA": "#ECE7FA",
+   "tintB": "#DDD4F4"
+  },
+  "entertainment": {
+   "color": "#F4B73D",
+   "emoji": "🎡",
+   "label": "Fun",
+   "tintA": "#FBF0D8",
+   "tintB": "#F7E6BC"
+  },
+  "shopping": {
+   "color": "#E0739E",
+   "emoji": "🛍️",
+   "label": "Shopping",
+   "tintA": "#FBE2EE",
+   "tintB": "#F6CFE0"
+  },
+  "religious": {
+   "color": "#C98A5E",
+   "emoji": "🛕",
+   "label": "Religious",
+   "tintA": "#F6E8DA",
+   "tintB": "#EFD8C2"
+  }
+ },
+ "landmarks": [
+  {
+   "id": "marina-bay-sands",
+   "name": "Marina Bay Sands",
+   "category": "landmark",
+   "isAnchor": true,
+   "lat": 1.2837575,
+   "lng": 103.8591065,
+   "emoji": "🏨",
+   "description": "The iconic three-tower resort crowned by a ship-shaped SkyPark, defining Singapore's skyline since 2010.",
+   "area": "Marina Bay",
+   "hours": "Open 24 hours",
+   "tip": "SkyPark observation deck best at dusk",
+   "sprite": [
+    6,
+    63,
+    244,
+    187
+   ]
+  },
+  {
+   "id": "gardens-by-the-bay",
+   "name": "Gardens by the Bay",
+   "category": "nature",
+   "lat": 1.2815683,
+   "lng": 103.8636132,
+   "emoji": "🌳",
+   "description": "A futuristic waterfront park of towering Supertrees and two cooled glass conservatories.",
+   "area": "Marina South",
+   "hours": "05:00–02:00",
+   "tip": "Garden Rhapsody light show at 19:45 & 20:45",
+   "sprite": [
+    263,
+    6,
+    243,
+    244
+   ]
+  },
+  {
+   "id": "merlion-park",
+   "name": "Merlion Park",
+   "category": "landmark",
+   "lat": 1.2867449,
+   "lng": 103.8543872,
+   "emoji": "🦁",
+   "description": "The half-lion, half-fish guardian of Singapore, spouting water across Marina Bay since 1972.",
+   "area": "Marina Bay",
+   "hours": "Open 24 hours",
+   "tip": "Best photos at sunrise before crowds",
+   "sprite": [
+    531,
+    6,
+    218,
+    244
+   ]
+  },
+  {
+   "id": "singapore-botanic-gardens",
+   "name": "Singapore Botanic Gardens",
+   "category": "nature",
+   "isAnchor": true,
+   "lat": 1.3138397,
+   "lng": 103.8159136,
+   "emoji": "🌸",
+   "description": "Singapore's first UNESCO World Heritage Site, a 160-year-old tropical garden with a famed National Orchid Garden.",
+   "area": "Tanglin",
+   "hours": "05:00–24:00",
+   "tip": "Main garden is free; Orchid Garden is ticketed",
+   "sprite": [
+    774,
+    20,
+    244,
+    230
+   ]
+  },
+  {
+   "id": "universal-studios-singapore",
+   "name": "Universal Studios Singapore",
+   "category": "entertainment",
+   "isAnchor": true,
+   "lat": 1.2540421,
+   "lng": 103.8238084,
+   "emoji": "🎢",
+   "description": "Southeast Asia's first Universal theme park, with seven themed zones and the Battlestar Galactica duelling coasters.",
+   "area": "Sentosa",
+   "hours": "10:00–20:00",
+   "tip": "Buy the Express Pass on peak days",
+   "sprite": [
+    1030,
+    75,
+    244,
+    175
+   ]
+  },
+  {
+   "id": "sentosa-island",
+   "name": "Sentosa Island",
+   "category": "entertainment",
+   "lat": 1.2494041,
+   "lng": 103.8303209,
+   "emoji": "🏝️",
+   "description": "A resort island of beaches, theme parks, and attractions linked to the mainland by cable car and boardwalk.",
+   "area": "Sentosa",
+   "hours": "Open 24 hours",
+   "tip": "Walk in free via the Sentosa Boardwalk",
+   "sprite": [
+    1286,
+    59,
+    244,
+    191
+   ]
+  },
+  {
+   "id": "singapore-zoo",
+   "name": "Singapore Zoo",
+   "category": "nature",
+   "isAnchor": true,
+   "lat": 1.4043485,
+   "lng": 103.793023,
+   "emoji": "🦒",
+   "description": "A world-renowned open-concept zoo where animals roam in naturalistic, barrier-free habitats.",
+   "area": "Mandai",
+   "hours": "08:30–18:00",
+   "tip": "Arrive at opening to catch animals active",
+   "sprite": [
+    1542,
+    50,
+    244,
+    200
+   ]
+  },
+  {
+   "id": "singapore-flyer",
+   "name": "Singapore Flyer",
+   "category": "entertainment",
+   "lat": 1.2892988,
+   "lng": 103.8631368,
+   "emoji": "🎡",
+   "description": "One of Asia's largest observation wheels, offering 30-minute rotations 165m above Marina Bay.",
+   "area": "Marina Bay",
+   "hours": "10:00–22:00",
+   "tip": "Sunset flights give the best skyline light",
+   "sprite": [
+    1821,
+    6,
+    199,
+    244
+   ]
+  },
+  {
+   "id": "chinatown",
+   "name": "Chinatown",
+   "category": "culture",
+   "lat": 1.2814942,
+   "lng": 103.8448202,
+   "emoji": "🏮",
+   "description": "A heritage quarter of shophouses, temples, and food streets at the heart of Singapore's Chinese community.",
+   "area": "Chinatown",
+   "hours": "Open 24 hours",
+   "tip": "Pagoda Street stalls liven up by midday",
+   "sprite": [
+    2054,
+    41,
+    244,
+    209
+   ]
+  },
+  {
+   "id": "little-india",
+   "name": "Little India",
+   "category": "culture",
+   "isAnchor": true,
+   "lat": 1.3065597,
+   "lng": 103.851819,
+   "emoji": "🛕",
+   "description": "A vibrant, fragrant district of garland stalls, Tamil eateries, and colourful heritage shophouses.",
+   "area": "Little India",
+   "hours": "Open 24 hours",
+   "tip": "Liveliest on Sunday evenings",
+   "sprite": [
+    2327,
+    6,
+    210,
+    244
+   ]
+  },
+  {
+   "id": "clarke-quay",
+   "name": "Clarke Quay",
+   "category": "entertainment",
+   "lat": 1.2906024,
+   "lng": 103.8464742,
+   "emoji": "🍸",
+   "description": "A riverside quay of colourful restored godowns, now Singapore's buzziest nightlife and dining strip.",
+   "area": "Singapore River",
+   "hours": "17:00–02:00",
+   "tip": "Liveliest after 21:00; quiet by day",
+   "sprite": [
+    6,
+    312,
+    244,
+    194
+   ]
+  },
+  {
+   "id": "night-safari",
+   "name": "Night Safari",
+   "category": "nature",
+   "lat": 1.4021872,
+   "lng": 103.7880606,
+   "emoji": "🌙",
+   "description": "The world's first nocturnal wildlife park, exploring nighttime habitats by tram and walking trail.",
+   "area": "Mandai",
+   "hours": "18:15–24:00",
+   "tip": "Take the tram first, then the trails",
+   "sprite": [
+    262,
+    280,
+    244,
+    226
+   ]
+  },
+  {
+   "id": "river-wonders",
+   "name": "River Wonders",
+   "category": "nature",
+   "lat": 1.4038498,
+   "lng": 103.7906676,
+   "emoji": "🐼",
+   "description": "A river-themed wildlife park home to giant pandas, manatees, and freshwater giants.",
+   "area": "Mandai",
+   "hours": "10:00–19:00",
+   "tip": "Panda Forest is air-conditioned—great midday escape",
+   "sprite": [
+    518,
+    290,
+    244,
+    216
+   ]
+  },
+  {
+   "id": "bird-paradise",
+   "name": "Bird Paradise",
+   "category": "nature",
+   "lat": 1.4071539,
+   "lng": 103.7812684,
+   "emoji": "🦜",
+   "description": "Asia's largest bird park, with walk-through aviaries recreating habitats from rainforest to wetlands.",
+   "area": "Mandai",
+   "hours": "09:00–18:00",
+   "tip": "Catch the Predators on Wings show",
+   "sprite": [
+    781,
+    262,
+    230,
+    244
+   ]
+  },
+  {
+   "id": "artscience-museum",
+   "name": "ArtScience Museum",
+   "category": "culture",
+   "lat": 1.2862738,
+   "lng": 103.8592663,
+   "emoji": "🪷",
+   "description": "A lotus-shaped museum at Marina Bay Sands blending art, science, and tech, home to teamLab's Future World.",
+   "area": "Marina Bay",
+   "hours": "10:00–19:00",
+   "tip": "Future World is the permanent highlight",
+   "sprite": [
+    1030,
+    310,
+    244,
+    196
+   ]
+  },
+  {
+   "id": "esplanade",
+   "name": "Esplanade – Theatres on the Bay",
+   "category": "culture",
+   "lat": 1.2897934,
+   "lng": 103.8558166,
+   "emoji": "🎭",
+   "description": "Singapore's spiky durian-domed performing arts centre on the bay, with free daily performances.",
+   "area": "Downtown Core",
+   "hours": "Open daily (show times vary)",
+   "tip": "Rooftop terrace has a great bay view",
+   "sprite": [
+    1286,
+    326,
+    244,
+    180
+   ]
+  },
+  {
+   "id": "national-gallery-singapore",
+   "name": "National Gallery Singapore",
+   "category": "culture",
+   "lat": 1.2902217,
+   "lng": 103.8515167,
+   "emoji": "🖼️",
+   "description": "Southeast Asia's largest art museum, set in the restored former Supreme Court and City Hall.",
+   "area": "Civic District",
+   "hours": "10:00–19:00",
+   "tip": "Padang Deck has skyline views",
+   "sprite": [
+    1542,
+    310,
+    244,
+    196
+   ]
+  },
+  {
+   "id": "national-museum-singapore",
+   "name": "National Museum of Singapore",
+   "category": "culture",
+   "lat": 1.296613,
+   "lng": 103.8485091,
+   "emoji": "🏛️",
+   "description": "Singapore's oldest museum, tracing the nation's story through immersive multimedia galleries.",
+   "area": "Civic District",
+   "hours": "10:00–19:00",
+   "tip": "Don't miss the Glass Rotunda installation",
+   "sprite": [
+    1798,
+    307,
+    244,
+    199
+   ]
+  },
+  {
+   "id": "jewel-changi-airport",
+   "name": "Jewel Changi Airport",
+   "category": "landmark",
+   "isAnchor": true,
+   "lat": 1.3602094,
+   "lng": 103.9897598,
+   "emoji": "💧",
+   "description": "A nature-themed complex at Changi Airport centred on the HSBC Rain Vortex, the world's tallest indoor waterfall.",
+   "area": "Changi",
+   "hours": "Open 24 hours",
+   "tip": "Rain Vortex light show runs nightly",
+   "sprite": [
+    2054,
+    263,
+    244,
+    243
+   ]
+  },
+  {
+   "id": "buddha-tooth-relic-temple",
+   "name": "Buddha Tooth Relic Temple",
+   "category": "religious",
+   "lat": 1.2815155,
+   "lng": 103.8442397,
+   "emoji": "☸️",
+   "description": "A grand Tang-style Buddhist temple in Chinatown said to house a sacred tooth relic of the Buddha.",
+   "area": "Chinatown",
+   "hours": "07:00–17:00",
+   "tip": "Dress modestly; rooftop orchid garden up top",
+   "sprite": [
+    2310,
+    278,
+    244,
+    228
+   ]
+  },
+  {
+   "id": "sri-mariamman-temple",
+   "name": "Sri Mariamman Temple",
+   "category": "religious",
+   "lat": 1.2829761,
+   "lng": 103.8449433,
+   "emoji": "🛕",
+   "description": "Singapore's oldest Hindu temple (1827), famed for its vivid, sculpture-covered gopuram tower in Chinatown.",
+   "area": "Chinatown",
+   "hours": "07:00–12:00, 18:00–21:00",
+   "tip": "Theemithi fire-walking festival in autumn",
+   "sprite": [
+    43,
+    518,
+    170,
+    244
+   ]
+  },
+  {
+   "id": "sultan-mosque",
+   "name": "Sultan Mosque",
+   "category": "religious",
+   "lat": 1.3022854,
+   "lng": 103.8589636,
+   "emoji": "🕌",
+   "description": "Singapore's most important mosque, its golden dome the centrepiece of the Kampong Glam quarter since 1826.",
+   "area": "Kampong Glam",
+   "hours": "10:00–12:00, 14:00–16:00 (closed Fri)",
+   "tip": "Free guided tours; dress modestly",
+   "sprite": [
+    269,
+    518,
+    231,
+    244
+   ]
+  },
+  {
+   "id": "haji-lane",
+   "name": "Haji Lane",
+   "category": "shopping",
+   "lat": 1.3007065,
+   "lng": 103.8591356,
+   "emoji": "🎨",
+   "description": "A narrow, mural-splashed lane of indie boutiques, cafés, and bars in the heart of Kampong Glam.",
+   "area": "Kampong Glam",
+   "hours": "Open 24 hours",
+   "tip": "Shops open from late morning; bars at night",
+   "sprite": [
+    518,
+    530,
+    244,
+    232
+   ]
+  },
+  {
+   "id": "malay-heritage-centre",
+   "name": "Malay Heritage Centre",
+   "category": "culture",
+   "lat": 1.3027993,
+   "lng": 103.8599265,
+   "emoji": "🏯",
+   "description": "A museum in the former Istana Kampong Glam tracing the heritage of Singapore's Malay community.",
+   "area": "Kampong Glam",
+   "hours": "10:00–18:00 (closed Mon)",
+   "tip": "Set in a restored royal palace",
+   "sprite": [
+    774,
+    574,
+    244,
+    188
+   ]
+  },
+  {
+   "id": "raffles-hotel",
+   "name": "Raffles Hotel",
+   "category": "landmark",
+   "lat": 1.294889,
+   "lng": 103.854483,
+   "emoji": "🏨",
+   "description": "A storied 1887 colonial hotel, birthplace of the Singapore Sling and an enduring symbol of old Singapore.",
+   "area": "Civic District",
+   "hours": "Open 24 hours",
+   "tip": "Sip a Singapore Sling at the Long Bar",
+   "sprite": [
+    1030,
+    566,
+    244,
+    196
+   ]
+  },
+  {
+   "id": "orchard-road",
+   "name": "Orchard Road",
+   "category": "shopping",
+   "isAnchor": true,
+   "lat": 1.3048205,
+   "lng": 103.8321984,
+   "emoji": "🛍️",
+   "description": "Singapore's flagship shopping boulevard, a 2km belt of malls, flagship stores, and festive lights.",
+   "area": "Orchard",
+   "hours": "Open 24 hours",
+   "tip": "Dazzling Christmas light-up Nov–Jan",
+   "sprite": [
+    1286,
+    575,
+    244,
+    187
+   ]
+  },
+  {
+   "id": "ion-orchard",
+   "name": "ION Orchard",
+   "category": "shopping",
+   "lat": 1.3039557,
+   "lng": 103.8319537,
+   "emoji": "🏬",
+   "description": "A landmark luxury mall above Orchard MRT, topped by the ION Sky observation deck.",
+   "area": "Orchard",
+   "hours": "10:00–22:00",
+   "tip": "Free city views from ION Sky, level 55",
+   "sprite": [
+    1542,
+    578,
+    244,
+    184
+   ]
+  },
+  {
+   "id": "fort-canning-park",
+   "name": "Fort Canning Park",
+   "category": "nature",
+   "lat": 1.2943876,
+   "lng": 103.8458033,
+   "emoji": "🌳",
+   "description": "A historic hilltop park of heritage trees, gardens, and the photogenic Fort Canning Tree Tunnel.",
+   "area": "Fort Canning",
+   "hours": "Open 24 hours",
+   "tip": "Tree Tunnel spiral staircase is the photo spot",
+   "sprite": [
+    1803,
+    518,
+    235,
+    244
+   ]
+  },
+  {
+   "id": "marina-barrage",
+   "name": "Marina Barrage",
+   "category": "nature",
+   "lat": 1.2805168,
+   "lng": 103.8714399,
+   "emoji": "🪁",
+   "description": "A dam with a rooftop green lawn offering sweeping skyline views, popular for picnics and kite-flying.",
+   "area": "Marina South",
+   "hours": "Open 24 hours",
+   "tip": "Sunset on the rooftop lawn is unbeatable",
+   "sprite": [
+    2054,
+    547,
+    244,
+    215
+   ]
+  },
+  {
+   "id": "singapore-oceanarium",
+   "name": "Singapore Oceanarium",
+   "category": "entertainment",
+   "lat": 1.2583209,
+   "lng": 103.8205147,
+   "emoji": "🐠",
+   "description": "A vastly expanded marine attraction (formerly S.E.A. Aquarium) on Sentosa with one of the world's largest tanks.",
+   "area": "Sentosa",
+   "hours": "10:00–20:00",
+   "tip": "The Open Ocean viewing panel is mesmerising",
+   "sprite": [
+    2310,
+    569,
+    244,
+    193
+   ]
+  },
+  {
+   "id": "thian-hock-keng-temple",
+   "name": "Thian Hock Keng Temple",
+   "category": "religious",
+   "lat": 1.280939,
+   "lng": 103.8476354,
+   "emoji": "⛩️",
+   "description": "One of Singapore's oldest Hokkien temples (1839), built without nails to honour the sea goddess Mazu.",
+   "area": "Telok Ayer",
+   "hours": "07:30–17:00",
+   "tip": "Once stood right on the original shoreline",
+   "sprite": [
+    6,
+    832,
+    244,
+    186
+   ]
+  },
+  {
+   "id": "lau-pa-sat",
+   "name": "Lau Pa Sat",
+   "category": "food",
+   "lat": 1.2805121,
+   "lng": 103.8503809,
+   "emoji": "🍢",
+   "description": "A historic Victorian cast-iron market hall in the CBD, famous for its evening Satay Street.",
+   "area": "Downtown Core",
+   "hours": "Open 24 hours",
+   "tip": "Satay Street fires up after 19:00",
+   "sprite": [
+    264,
+    774,
+    241,
+    244
+   ]
+  },
+  {
+   "id": "maxwell-food-centre",
+   "name": "Maxwell Food Centre",
+   "category": "food",
+   "lat": 1.2803361,
+   "lng": 103.844767,
+   "emoji": "🍜",
+   "description": "A beloved Chinatown hawker centre, home to the legendary Tian Tian Hainanese Chicken Rice.",
+   "area": "Chinatown",
+   "hours": "08:00–22:00",
+   "tip": "Go early; top stalls sell out",
+   "sprite": [
+    518,
+    779,
+    244,
+    239
+   ]
+  },
+  {
+   "id": "newton-food-centre",
+   "name": "Newton Food Centre",
+   "category": "food",
+   "lat": 1.3119888,
+   "lng": 103.8395742,
+   "emoji": "🦐",
+   "description": "An iconic open-air hawker centre best known for BBQ seafood, satay, and chilli crab.",
+   "area": "Newton",
+   "hours": "12:00–02:00",
+   "tip": "Featured in the film Crazy Rich Asians",
+   "sprite": [
+    774,
+    778,
+    244,
+    240
+   ]
+  },
+  {
+   "id": "singapore-cable-car",
+   "name": "Singapore Cable Car",
+   "category": "entertainment",
+   "lat": 1.2711448,
+   "lng": 103.8195992,
+   "emoji": "🚠",
+   "description": "A scenic cable car linking Mount Faber, HarbourFront, and Sentosa with panoramic harbour views.",
+   "area": "Mount Faber",
+   "hours": "08:45–21:30",
+   "tip": "Glass-floor SkyOrb cabins for a thrill",
+   "sprite": [
+    1030,
+    812,
+    244,
+    206
+   ]
+  },
+  {
+   "id": "henderson-waves",
+   "name": "Henderson Waves",
+   "category": "nature",
+   "lat": 1.275866,
+   "lng": 103.8158303,
+   "emoji": "🌉",
+   "description": "Singapore's highest pedestrian bridge, a sculptural wave of timber along the Southern Ridges trail.",
+   "area": "Telok Blangah",
+   "hours": "Open 24 hours",
+   "tip": "Lit up at night; great at sunset",
+   "sprite": [
+    1286,
+    868,
+    244,
+    150
+   ]
+  },
+  {
+   "id": "mount-faber-park",
+   "name": "Mount Faber Park",
+   "category": "nature",
+   "lat": 1.2718742,
+   "lng": 103.8192125,
+   "emoji": "⛰️",
+   "description": "One of Singapore's oldest hilltop parks, with lush trails and skyline lookouts at Faber Peak.",
+   "area": "Mount Faber",
+   "hours": "Open 24 hours",
+   "tip": "Walk up from HarbourFront MRT",
+   "sprite": [
+    1542,
+    817,
+    244,
+    201
+   ]
+  },
+  {
+   "id": "helix-bridge",
+   "name": "Helix Bridge",
+   "category": "landmark",
+   "lat": 1.2874774,
+   "lng": 103.8606326,
+   "emoji": "🧬",
+   "description": "A pedestrian bridge across Marina Bay shaped like a DNA double helix, glowing at night.",
+   "area": "Marina Bay",
+   "hours": "Open 24 hours",
+   "tip": "Viewing pods frame Marina Bay Sands",
+   "sprite": [
+    1798,
+    869,
+    244,
+    149
+   ]
+  },
+  {
+   "id": "haw-par-villa",
+   "name": "Haw Par Villa",
+   "category": "culture",
+   "lat": 1.2841526,
+   "lng": 103.781892,
+   "emoji": "👹",
+   "description": "A surreal 1937 cultural park of vivid statues depicting Chinese mythology and the Ten Courts of Hell.",
+   "area": "Pasir Panjang",
+   "hours": "09:00–18:00",
+   "tip": "Check current opening before visiting",
+   "sprite": [
+    2054,
+    813,
+    244,
+    205
+   ]
+  },
+  {
+   "id": "east-coast-park",
+   "name": "East Coast Park",
+   "category": "nature",
+   "isAnchor": true,
+   "lat": 1.3007842,
+   "lng": 103.9121866,
+   "emoji": "🏖️",
+   "description": "Singapore's longest coastal park, a 15km stretch for cycling, picnics, seafood, and sea breezes.",
+   "area": "East Coast",
+   "hours": "Open 24 hours",
+   "tip": "Rent a bike; East Coast Lagoon food village nearby",
+   "sprite": [
+    2310,
+    809,
+    244,
+    209
+   ]
+  },
+  {
+   "id": "asian-civilisations-museum",
+   "name": "Asian Civilisations Museum",
+   "category": "culture",
+   "lat": 1.2875002,
+   "lng": 103.8513853,
+   "emoji": "🏺",
+   "description": "A riverside museum devoted to the cultures and artefacts of Asia, from ceramics to ancient trade.",
+   "area": "Civic District",
+   "hours": "10:00–19:00",
+   "tip": "Free guided tours run daily",
+   "sprite": [
+    6,
+    1084,
+    244,
+    190
+   ]
+  },
+  {
+   "id": "peranakan-museum",
+   "name": "Peranakan Museum",
+   "category": "culture",
+   "lat": 1.2943669,
+   "lng": 103.8490391,
+   "emoji": "🫖",
+   "description": "A jewel-box museum celebrating Peranakan culture, with exquisite beadwork, porcelain, and Nyonya heritage.",
+   "area": "Civic District",
+   "hours": "10:00–19:00",
+   "tip": "Stellar gift shop on the ground floor",
+   "sprite": [
+    262,
+    1036,
+    244,
+    238
+   ]
+  },
+  {
+   "id": "boat-quay",
+   "name": "Boat Quay",
+   "category": "entertainment",
+   "lat": 1.2859916,
+   "lng": 103.8501667,
+   "emoji": "🛶",
+   "description": "A historic riverfront row of restored shophouses, now lively waterfront bars and restaurants.",
+   "area": "Singapore River",
+   "hours": "Open 24 hours",
+   "tip": "Sunset river views toward the CBD",
+   "sprite": [
+    518,
+    1084,
+    244,
+    190
+   ]
+  },
+  {
+   "id": "tekka-centre",
+   "name": "Tekka Centre",
+   "category": "food",
+   "lat": 1.3063839,
+   "lng": 103.8507014,
+   "emoji": "🍛",
+   "description": "Little India's bustling wet market and hawker centre, famed for biryani, prata, and Indian fare.",
+   "area": "Little India",
+   "hours": "06:30–21:00",
+   "tip": "Upstairs has colourful textile shops",
+   "sprite": [
+    774,
+    1046,
+    244,
+    228
+   ]
+  },
+  {
+   "id": "tiong-bahru-market",
+   "name": "Tiong Bahru Market",
+   "category": "food",
+   "lat": 1.2850771,
+   "lng": 103.8328072,
+   "emoji": "🥟",
+   "description": "A beloved hawker centre in heritage Tiong Bahru, known for chwee kueh, lor mee, and curry rice.",
+   "area": "Tiong Bahru",
+   "hours": "06:00–20:00",
+   "tip": "Pair with a stroll through Art Deco Tiong Bahru",
+   "sprite": [
+    1030,
+    1052,
+    244,
+    222
+   ]
+  },
+  {
+   "id": "chinatown-complex-food-centre",
+   "name": "Chinatown Complex Food Centre",
+   "category": "food",
+   "lat": 1.2825735,
+   "lng": 103.8431104,
+   "emoji": "🍗",
+   "description": "Singapore's largest hawker centre with 260+ stalls, including a Michelin-listed soya sauce chicken.",
+   "area": "Chinatown",
+   "hours": "07:00–22:00",
+   "tip": "Lunchtime has the most stalls open",
+   "sprite": [
+    1286,
+    1090,
+    244,
+    184
+   ]
+  },
+  {
+   "id": "old-airport-road-food-centre",
+   "name": "Old Airport Road Food Centre",
+   "category": "food",
+   "lat": 1.3082405,
+   "lng": 103.8858445,
+   "emoji": "🥘",
+   "description": "A local-favourite hawker centre revered for lor mee, Hokkien mee, and kway chap.",
+   "area": "Mountbatten",
+   "hours": "06:00–22:30",
+   "tip": "A true foodie pilgrimage, light on tourists",
+   "sprite": [
+    1542,
+    1031,
+    244,
+    243
+   ]
+  },
+  {
+   "id": "macritchie-reservoir",
+   "name": "MacRitchie Reservoir",
+   "category": "nature",
+   "lat": 1.3447621,
+   "lng": 103.8223506,
+   "emoji": "🐒",
+   "description": "Singapore's oldest reservoir, ringed by rainforest trails and the canopy-level TreeTop Walk.",
+   "area": "Central Catchment",
+   "hours": "07:00–19:00",
+   "tip": "Watch your snacks—macaques are bold",
+   "sprite": [
+    1798,
+    1079,
+    244,
+    195
+   ]
+  },
+  {
+   "id": "bukit-timah-nature-reserve",
+   "name": "Bukit Timah Nature Reserve",
+   "category": "nature",
+   "lat": 1.3483883,
+   "lng": 103.776701,
+   "emoji": "🥾",
+   "description": "A primary rainforest reserve around Singapore's highest hill, rich with wildlife and hiking trails.",
+   "area": "Bukit Timah",
+   "hours": "07:00–19:00",
+   "tip": "Colour-coded trails by difficulty",
+   "sprite": [
+    2054,
+    1039,
+    244,
+    235
+   ]
+  },
+  {
+   "id": "pulau-ubin",
+   "name": "Pulau Ubin",
+   "category": "nature",
+   "lat": 1.4125659,
+   "lng": 103.9577334,
+   "emoji": "🚲",
+   "description": "A rustic island offering a glimpse of 1960s kampong Singapore, best explored by bicycle.",
+   "area": "Pulau Ubin",
+   "hours": "Open daily (bumboat from Changi)",
+   "tip": "Bring cash; visit Chek Jawa at low tide",
+   "sprite": [
+    2310,
+    1070,
+    244,
+    204
+   ]
+  },
+  {
+   "id": "sri-veeramakaliamman-temple",
+   "name": "Sri Veeramakaliamman Temple",
+   "category": "religious",
+   "lat": 1.3078878,
+   "lng": 103.85248,
+   "emoji": "🪔",
+   "description": "A vivid Little India temple dedicated to the goddess Kali, one of Singapore's oldest Hindu shrines.",
+   "area": "Little India",
+   "hours": "05:30–12:00, 17:00–21:00",
+   "tip": "Most atmospheric during evening prayers",
+   "sprite": [
+    25,
+    1286,
+    206,
+    244
+   ]
+  },
+  {
+   "id": "masjid-jamae",
+   "name": "Masjid Jamae (Chulia)",
+   "category": "religious",
+   "lat": 1.2832261,
+   "lng": 103.8454284,
+   "emoji": "☪️",
+   "description": "An 1826 mosque in Chinatown blending South Indian, Islamic, and neoclassical design.",
+   "area": "Chinatown",
+   "hours": "10:00–21:00",
+   "tip": "Striking green-and-white gateway facade",
+   "sprite": [
+    272,
+    1286,
+    224,
+    244
+   ]
+  },
+  {
+   "id": "kong-meng-san",
+   "name": "Kong Meng San Phor Kark See Monastery",
+   "category": "religious",
+   "lat": 1.3615175,
+   "lng": 103.8358116,
+   "emoji": "🧘",
+   "description": "Singapore's largest Buddhist monastery, a sprawling complex of halls, gardens, and giant Buddha statues.",
+   "area": "Bishan",
+   "hours": "08:00–16:00",
+   "tip": "Affordable vegetarian canteen on site",
+   "sprite": [
+    518,
+    1304,
+    244,
+    226
+   ]
+  },
+  {
+   "id": "chijmes",
+   "name": "CHIJMES",
+   "category": "culture",
+   "lat": 1.2952923,
+   "lng": 103.8517863,
+   "emoji": "🥂",
+   "description": "A restored 19th-century convent and Gothic chapel, now an elegant dining and events courtyard.",
+   "area": "Civic District",
+   "hours": "Open 24 hours",
+   "tip": "Beautifully lit at night; featured in Crazy Rich Asians",
+   "sprite": [
+    774,
+    1307,
+    244,
+    223
+   ]
+  },
+  {
+   "id": "st-andrews-cathedral",
+   "name": "St Andrew's Cathedral",
+   "category": "religious",
+   "lat": 1.2923914,
+   "lng": 103.8522543,
+   "emoji": "⛪",
+   "description": "Singapore's largest cathedral, a gleaming white neo-Gothic landmark in the Civic District (1856).",
+   "area": "Civic District",
+   "hours": "07:00–20:00",
+   "tip": "Free entry; peaceful green grounds",
+   "sprite": [
+    1042,
+    1286,
+    220,
+    244
+   ]
+  },
+  {
+   "id": "science-centre-singapore",
+   "name": "Science Centre Singapore",
+   "category": "entertainment",
+   "lat": 1.3331687,
+   "lng": 103.7356443,
+   "emoji": "🔬",
+   "description": "A hands-on science museum with 1,000+ interactive exhibits, an OmniTheatre, and rotating shows.",
+   "area": "Jurong East",
+   "hours": "10:00–17:00 (closed Mon)",
+   "tip": "Great rainy-day outing for families",
+   "sprite": [
+    1286,
+    1361,
+    244,
+    169
+   ]
+  },
+  {
+   "id": "jurong-lake-gardens",
+   "name": "Jurong Lake Gardens",
+   "category": "nature",
+   "isAnchor": true,
+   "lat": 1.3348492,
+   "lng": 103.7264557,
+   "emoji": "🦦",
+   "description": "A revamped national garden in the west with lakeside trails, wildlife, and a popular play area.",
+   "area": "Jurong East",
+   "hours": "Open 24 hours",
+   "tip": "Otters and monitor lizards are common sightings",
+   "sprite": [
+    1542,
+    1315,
+    244,
+    215
+   ]
+  },
+  {
+   "id": "chinese-garden",
+   "name": "Chinese Garden",
+   "category": "nature",
+   "lat": 1.3385396,
+   "lng": 103.7303578,
+   "emoji": "🐉",
+   "description": "A serene park styled after northern Chinese imperial gardens, with pagodas and the White Rainbow Bridge.",
+   "area": "Jurong East",
+   "hours": "05:30–24:00",
+   "tip": "Sunset light on the pagodas is gorgeous",
+   "sprite": [
+    1798,
+    1310,
+    244,
+    220
+   ]
+  },
+  {
+   "id": "sungei-buloh-wetland-reserve",
+   "name": "Sungei Buloh Wetland Reserve",
+   "category": "nature",
+   "lat": 1.4464304,
+   "lng": 103.723404,
+   "emoji": "🐊",
+   "description": "A mangrove wetland reserve in the northwest, prime for birdwatching, mudskippers, and monitor lizards.",
+   "area": "Kranji",
+   "hours": "07:00–19:00",
+   "tip": "Visit at low tide for the most wildlife",
+   "sprite": [
+    2054,
+    1343,
+    244,
+    187
+   ]
+  },
+  {
+   "id": "labrador-nature-reserve",
+   "name": "Labrador Nature Reserve",
+   "category": "nature",
+   "lat": 1.2665094,
+   "lng": 103.8020649,
+   "emoji": "🌅",
+   "description": "A coastal nature reserve with sea views to Sentosa, WWII relics, and a breezy waterfront promenade.",
+   "area": "Labrador",
+   "hours": "07:00–19:00",
+   "tip": "Sunset views over the southern islands",
+   "sprite": [
+    2310,
+    1331,
+    244,
+    199
+   ]
+  },
+  {
+   "id": "vivocity",
+   "name": "VivoCity",
+   "category": "shopping",
+   "lat": 1.2647139,
+   "lng": 103.8231658,
+   "emoji": "🛒",
+   "description": "Singapore's largest mall at HarbourFront, the gateway to Sentosa with a breezy rooftop terrace.",
+   "area": "HarbourFront",
+   "hours": "10:00–22:00",
+   "tip": "Board the Sentosa Express from level 3",
+   "sprite": [
+    6,
+    1585,
+    244,
+    201
+   ]
+  },
+  {
+   "id": "bugis-street",
+   "name": "Bugis Street",
+   "category": "shopping",
+   "lat": 1.3001991,
+   "lng": 103.8552015,
+   "emoji": "👕",
+   "description": "A bustling covered street market packed with cheap fashion, souvenirs, and street snacks.",
+   "area": "Bugis",
+   "hours": "10:00–22:00",
+   "tip": "Haggle politely for better prices",
+   "sprite": [
+    262,
+    1599,
+    244,
+    187
+   ]
+  },
+  {
+   "id": "mustafa-centre",
+   "name": "Mustafa Centre",
+   "category": "shopping",
+   "lat": 1.3099676,
+   "lng": 103.8554251,
+   "emoji": "💎",
+   "description": "A sprawling 24-hour department store in Little India selling everything from electronics to gold.",
+   "area": "Little India",
+   "hours": "Open 24 hours",
+   "tip": "Quietest to shop late at night",
+   "sprite": [
+    518,
+    1562,
+    244,
+    224
+   ]
+  },
+  {
+   "id": "fountain-of-wealth",
+   "name": "Fountain of Wealth",
+   "category": "landmark",
+   "lat": 1.2947425,
+   "lng": 103.8589026,
+   "emoji": "⛲",
+   "description": "Once the world's largest fountain, a feng shui centrepiece of Suntec City believed to bring luck.",
+   "area": "Marina Centre",
+   "hours": "10:00–12:00, 14:00–16:00, 18:00–19:30",
+   "tip": "Walk around the mini fountain for good fortune",
+   "sprite": [
+    774,
+    1606,
+    244,
+    180
+   ]
+  },
+  {
+   "id": "the-shoppes-mbs",
+   "name": "The Shoppes at Marina Bay Sands",
+   "category": "shopping",
+   "lat": 1.2836889,
+   "lng": 103.8591846,
+   "emoji": "💳",
+   "description": "A luxury mall beneath Marina Bay Sands with an indoor canal and sampan rides.",
+   "area": "Marina Bay",
+   "hours": "10:30–23:00",
+   "tip": "Catch the Spectra light show outside at the bay",
+   "sprite": [
+    1030,
+    1559,
+    244,
+    227
+   ]
+  },
+  {
+   "id": "singapore-city-gallery",
+   "name": "Singapore City Gallery",
+   "category": "culture",
+   "lat": 1.2798527,
+   "lng": 103.845058,
+   "emoji": "🏙️",
+   "description": "A free gallery on Singapore's urban transformation, centred on a vast city scale model.",
+   "area": "Tanjong Pagar",
+   "hours": "09:00–17:00 (closed Sun)",
+   "tip": "The CBD architectural model is the highlight",
+   "sprite": [
+    1286,
+    1598,
+    244,
+    188
+   ]
+  },
+  {
+   "id": "fort-siloso",
+   "name": "Fort Siloso",
+   "category": "culture",
+   "lat": 1.259363,
+   "lng": 103.8086242,
+   "emoji": "🪖",
+   "description": "Singapore's only preserved coastal fort, a free WWII museum with tunnels, guns, and a skywalk.",
+   "area": "Sentosa",
+   "hours": "09:00–18:00",
+   "tip": "Free; reach it via the Fort Siloso Skywalk",
+   "sprite": [
+    1542,
+    1572,
+    244,
+    214
+   ]
+  },
+  {
+   "id": "skyline-luge-sentosa",
+   "name": "Skyline Luge Sentosa",
+   "category": "entertainment",
+   "lat": 1.2549696,
+   "lng": 103.8173674,
+   "emoji": "🛷",
+   "description": "A gravity go-kart ride down winding hillside tracks, paired with a scenic Skyride up.",
+   "area": "Sentosa",
+   "hours": "10:00–21:30",
+   "tip": "Buy multi-ride combos; it's addictive",
+   "sprite": [
+    1798,
+    1544,
+    244,
+    242
+   ]
+  },
+  {
+   "id": "adventure-cove-waterpark",
+   "name": "Adventure Cove Waterpark",
+   "category": "entertainment",
+   "lat": 1.2587643,
+   "lng": 103.8196847,
+   "emoji": "🌊",
+   "description": "A waterpark at Resorts World with high-speed slides, a lazy river, and a snorkelling reef.",
+   "area": "Sentosa",
+   "hours": "10:00–17:00",
+   "tip": "Rainbow Reef snorkel is the unique draw",
+   "sprite": [
+    2054,
+    1577,
+    244,
+    209
+   ]
+  },
+  {
+   "id": "siloso-beach",
+   "name": "Siloso Beach",
+   "category": "nature",
+   "lat": 1.2554915,
+   "lng": 103.8123885,
+   "emoji": "🏐",
+   "description": "Sentosa's liveliest beach, lined with beach bars, volleyball nets, and adventure activities.",
+   "area": "Sentosa",
+   "hours": "Open 24 hours",
+   "tip": "Beach clubs and the MegaZip land here",
+   "sprite": [
+    2310,
+    1599,
+    244,
+    187
+   ]
+  },
+  {
+   "id": "robertson-quay",
+   "name": "Robertson Quay",
+   "category": "entertainment",
+   "lat": 1.2910567,
+   "lng": 103.8375528,
+   "emoji": "🍷",
+   "description": "The most relaxed stretch of the Singapore River, lined with riverside cafés, brunch spots, and wine bars.",
+   "area": "River Valley",
+   "hours": "Open 24 hours",
+   "tip": "Best for laid-back weekend brunch",
+   "sprite": [
+    6,
+    1868,
+    244,
+    174
+   ]
+  },
+  {
+   "id": "sri-srinivasa-perumal-temple",
+   "name": "Sri Srinivasa Perumal Temple",
+   "category": "religious",
+   "lat": 1.3132706,
+   "lng": 103.8560729,
+   "emoji": "🕉️",
+   "description": "A national-monument Hindu temple on Serangoon Road, the start point of the Thaipusam procession.",
+   "area": "Little India",
+   "hours": "06:00–12:00, 18:00–21:00",
+   "tip": "Spectacular during the Thaipusam festival",
+   "sprite": [
+    262,
+    1802,
+    244,
+    240
+   ]
+  },
+  {
+   "id": "temple-of-1000-lights",
+   "name": "Temple of 1000 Lights",
+   "category": "religious",
+   "lat": 1.3147222,
+   "lng": 103.8569444,
+   "emoji": "💡",
+   "description": "A Thai-style Buddhist temple (Sakya Muni Buddha Gaya) housing a 15m, 300-tonne seated Buddha.",
+   "area": "Little India",
+   "hours": "08:00–16:30",
+   "tip": "Look for the reclining Buddha chamber behind",
+   "sprite": [
+    518,
+    1806,
+    244,
+    236
+   ]
+  },
+  {
+   "id": "singapore-art-museum",
+   "name": "Singapore Art Museum",
+   "category": "culture",
+   "lat": 1.2719533,
+   "lng": 103.836752,
+   "emoji": "🖌️",
+   "description": "Singapore's contemporary art museum, now in a converted warehouse at Tanjong Pagar Distripark.",
+   "area": "Tanjong Pagar",
+   "hours": "10:00–19:00",
+   "tip": "Enter via the back loading dock—part of the charm",
+   "sprite": [
+    774,
+    1840,
+    244,
+    202
+   ]
+  },
+  {
+   "id": "gillman-barracks",
+   "name": "Gillman Barracks",
+   "category": "culture",
+   "lat": 1.2783333,
+   "lng": 103.8044444,
+   "emoji": "🏚️",
+   "description": "A cluster of contemporary art galleries set in restored 1930s colonial military barracks.",
+   "area": "Alexandra",
+   "hours": "Galleries 11:00–19:00 (closed Mon)",
+   "tip": "Free entry; pair with a meal on site",
+   "sprite": [
+    1030,
+    1879,
+    244,
+    163
+   ]
+  },
+  {
+   "id": "coney-island",
+   "name": "Coney Island Park",
+   "category": "nature",
+   "isAnchor": true,
+   "lat": 1.4092951,
+   "lng": 103.9216496,
+   "emoji": "🌴",
+   "description": "A rustic, undeveloped island park in the northeast with beaches, mangroves, and cycling trails.",
+   "area": "Punggol",
+   "hours": "07:00–19:00",
+   "tip": "No facilities inside—bring water",
+   "sprite": [
+    1286,
+    1849,
+    244,
+    193
+   ]
+  },
+  {
+   "id": "changi-beach-park",
+   "name": "Changi Beach Park",
+   "category": "nature",
+   "lat": 1.3912863,
+   "lng": 103.9905464,
+   "emoji": "✈️",
+   "description": "A tranquil eastern beach park with views of Pulau Ubin and low-flying planes landing at Changi.",
+   "area": "Changi",
+   "hours": "Open 24 hours",
+   "tip": "Great plane-spotting near the runway end",
+   "sprite": [
+    1542,
+    1829,
+    244,
+    213
+   ]
+  },
+  {
+   "id": "pasir-ris-park",
+   "name": "Pasir Ris Park",
+   "category": "nature",
+   "lat": 1.3720588,
+   "lng": 103.95268,
+   "emoji": "🎣",
+   "description": "A large coastal park in the east with a mangrove boardwalk, fishing pond, and cycling tracks.",
+   "area": "Pasir Ris",
+   "hours": "Open 24 hours",
+   "tip": "Mangrove boardwalk is good for wildlife",
+   "sprite": [
+    1798,
+    1825,
+    244,
+    217
+   ]
+  },
+  {
+   "id": "bishan-ang-mo-kio-park",
+   "name": "Bishan-Ang Mo Kio Park",
+   "category": "nature",
+   "lat": 1.3634088,
+   "lng": 103.8435614,
+   "emoji": "🐢",
+   "description": "A heartland park with a naturalised meandering river, popular for walks, otters, and turtles.",
+   "area": "Bishan",
+   "hours": "Open 24 hours",
+   "tip": "Spot the resident otter family at dawn",
+   "sprite": [
+    2054,
+    1849,
+    244,
+    193
+   ]
+  },
+  {
+   "id": "national-stadium",
+   "name": "National Stadium",
+   "category": "entertainment",
+   "lat": 1.3044376,
+   "lng": 103.8743321,
+   "emoji": "🏟️",
+   "description": "The centrepiece of the Singapore Sports Hub, a domed stadium hosting major concerts and sports.",
+   "area": "Kallang",
+   "hours": "Event days vary",
+   "tip": "Directly linked to Stadium MRT",
+   "sprite": [
+    2310,
+    1886,
+    244,
+    156
+   ]
+  },
+  {
+   "id": "palawan-beach",
+   "name": "Palawan Beach",
+   "category": "nature",
+   "lat": 1.2482777,
+   "lng": 103.8225374,
+   "emoji": "⛱️",
+   "description": "A family-friendly Sentosa beach with a suspension bridge to the 'southernmost point of continental Asia'.",
+   "area": "Sentosa",
+   "hours": "Open 24 hours",
+   "tip": "Cross the rope bridge to the islet lookout",
+   "sprite": [
+    6,
+    2102,
+    244,
+    196
+   ]
+  },
+  {
+   "id": "skypark-observation-deck",
+   "name": "SkyPark Observation Deck",
+   "category": "landmark",
+   "lat": 1.2852044,
+   "lng": 103.8610313,
+   "emoji": "🌃",
+   "description": "The observation deck atop Marina Bay Sands, with 360° views 200m above the bay.",
+   "area": "Marina Bay",
+   "hours": "10:00–22:00",
+   "tip": "Sunset slots sell out—book ahead",
+   "sprite": [
+    262,
+    2099,
+    244,
+    199
+   ]
+  },
+  {
+   "id": "cavenagh-bridge",
+   "name": "Cavenagh Bridge",
+   "category": "landmark",
+   "lat": 1.2865459,
+   "lng": 103.8523588,
+   "emoji": "🏞️",
+   "description": "Singapore's oldest bridge in original form (1869), a pedestrian suspension span by the Fullerton.",
+   "area": "Civic District",
+   "hours": "Open 24 hours",
+   "tip": "Glasgow-made ironwork; lovely lit at night",
+   "sprite": [
+    518,
+    2097,
+    244,
+    201
+   ]
+  },
+  {
+   "id": "parliament-house",
+   "name": "Parliament House",
+   "category": "landmark",
+   "lat": 1.2891543,
+   "lng": 103.8504863,
+   "emoji": "🏢",
+   "description": "Singapore's seat of government by the river, blending colonial and modern architecture.",
+   "area": "Civic District",
+   "hours": "08:30–18:00 (Mon–Fri)",
+   "tip": "Public can watch sittings when in session",
+   "sprite": [
+    774,
+    2138,
+    244,
+    160
+   ]
+  },
+  {
+   "id": "the-istana",
+   "name": "The Istana",
+   "category": "landmark",
+   "lat": 1.3067039,
+   "lng": 103.8431002,
+   "emoji": "🏰",
+   "description": "The official residence of Singapore's President, set in vast gardens off Orchard Road.",
+   "area": "Orchard",
+   "hours": "Open house on select public holidays",
+   "tip": "Only open to public on a few holidays a year",
+   "sprite": [
+    1030,
+    2144,
+    244,
+    154
+   ]
+  },
+  {
+   "id": "dempsey-hill",
+   "name": "Dempsey Hill",
+   "category": "food",
+   "lat": 1.3039916,
+   "lng": 103.8098603,
+   "emoji": "🍴",
+   "description": "A leafy former barracks turned lifestyle enclave of acclaimed restaurants, cafés, and galleries.",
+   "area": "Tanglin",
+   "hours": "Daily (venue hours vary)",
+   "tip": "Great brunch and durian stalls",
+   "sprite": [
+    1286,
+    2100,
+    244,
+    198
+   ]
+  },
+  {
+   "id": "holland-village",
+   "name": "Holland Village",
+   "category": "food",
+   "lat": 1.310912,
+   "lng": 103.7951937,
+   "emoji": "🍻",
+   "description": "A relaxed expat-favourite enclave of casual eateries, bars, and shops west of the city.",
+   "area": "Holland Village",
+   "hours": "Open 24 hours",
+   "tip": "Lola's and Lorong Mambong for evening drinks",
+   "sprite": [
+    1542,
+    2099,
+    244,
+    199
+   ]
+  },
+  {
+   "id": "peranakan-houses-joo-chiat",
+   "name": "Koon Seng Road Peranakan Houses",
+   "category": "culture",
+   "lat": 1.3103748,
+   "lng": 103.9024728,
+   "emoji": "🏘️",
+   "description": "A row of pastel Peranakan shophouses in Joo Chiat, among Singapore's most photogenic heritage facades.",
+   "area": "Joo Chiat",
+   "hours": "Open 24 hours",
+   "tip": "Best photos in late-afternoon golden light",
+   "sprite": [
+    1798,
+    2116,
+    244,
+    182
+   ]
+  },
+  {
+   "id": "geylang-serai-market",
+   "name": "Geylang Serai Market",
+   "category": "food",
+   "lat": 1.3167284,
+   "lng": 103.8982767,
+   "emoji": "🍲",
+   "description": "A vibrant Malay wet market and food centre, the heart of Singapore's Malay-Muslim community.",
+   "area": "Geylang",
+   "hours": "07:00–22:00 (stalls vary)",
+   "tip": "Best nasi padang; magical during Ramadan bazaar",
+   "sprite": [
+    2054,
+    2099,
+    244,
+    199
+   ]
+  },
+  {
+   "id": "wild-wild-wet",
+   "name": "Wild Wild Wet",
+   "category": "entertainment",
+   "lat": 1.3775946,
+   "lng": 103.9544243,
+   "emoji": "💦",
+   "description": "One of Singapore's largest waterparks, in the east with a wave pool and thrill slides.",
+   "area": "Pasir Ris",
+   "hours": "12:00–18:00 (closed Tue)",
+   "tip": "Weekday afternoons have the shortest queues",
+   "sprite": [
+    2315,
+    2054,
+    235,
+    244
+   ]
+  },
+  {
+   "id": "tanjong-beach",
+   "name": "Tanjong Beach",
+   "category": "nature",
+   "lat": 1.241666,
+   "lng": 103.8294151,
+   "emoji": "🐚",
+   "description": "The quietest, most laid-back of Sentosa's beaches, home to the stylish Tanjong Beach Club.",
+   "area": "Sentosa",
+   "hours": "Open 24 hours",
+   "tip": "Calmest spot for a relaxed beach day",
+   "sprite": [
+    6,
+    2334,
+    244,
+    220
+   ]
+  },
+  {
+   "id": "armenian-church",
+   "name": "Armenian Church",
+   "category": "religious",
+   "lat": 1.2930717,
+   "lng": 103.8494467,
+   "emoji": "✝️",
+   "description": "Singapore's oldest church (1835), an elegant white landmark with a serene memorial garden.",
+   "area": "Civic District",
+   "hours": "10:00–18:00",
+   "tip": "The garden holds the grave of the Vanda Miss Joaquim breeder",
+   "sprite": [
+    272,
+    2310,
+    224,
+    244
+   ]
+  },
+  {
+   "id": "sri-thendayuthapani-temple",
+   "name": "Sri Thendayuthapani Temple",
+   "category": "religious",
+   "lat": 1.2943222,
+   "lng": 103.843047,
+   "emoji": "🔱",
+   "description": "A national-monument Hindu temple (1859) on Tank Road dedicated to Lord Murugan, end point of Thaipusam.",
+   "area": "River Valley",
+   "hours": "07:00–12:00, 17:30–20:30",
+   "tip": "Thaipusam kavadi procession ends here",
+   "sprite": [
+    529,
+    2310,
+    223,
+    244
+   ]
+  },
+  {
+   "id": "changi-chapel-museum",
+   "name": "Changi Chapel and Museum",
+   "category": "culture",
+   "lat": 1.362212,
+   "lng": 103.974025,
+   "emoji": "🕯️",
+   "description": "A moving museum honouring the WWII POWs and civilians interned at Changi Prison.",
+   "area": "Changi",
+   "hours": "09:30–17:30 (closed Mon)",
+   "tip": "Book the free guided tour for context",
+   "sprite": [
+    774,
+    2324,
+    244,
+    230
+   ]
+  },
+  {
+   "id": "the-intan",
+   "name": "The Intan",
+   "category": "culture",
+   "lat": 1.3146307,
+   "lng": 103.9009827,
+   "emoji": "🪞",
+   "description": "A private Peranakan home museum in Joo Chiat, a treasure trove of antiques shared by its passionate owner.",
+   "area": "Joo Chiat",
+   "hours": "By appointment only",
+   "tip": "Book the tea-and-kueh tour in advance",
+   "sprite": [
+    1030,
+    2310,
+    244,
+    244
+   ]
+  },
+  {
+   "id": "skyhelix-sentosa",
+   "name": "SkyHelix Sentosa",
+   "category": "entertainment",
+   "lat": 1.2549381,
+   "lng": 103.817616,
+   "emoji": "🔭",
+   "description": "Singapore's highest open-air panoramic ride, a gently rotating gondola 79m above Sentosa.",
+   "area": "Sentosa",
+   "hours": "10:00–21:15",
+   "tip": "Go at dusk for day-to-night views",
+   "sprite": [
+    1347,
+    2310,
+    123,
+    244
+   ]
+  },
+  {
+   "id": "wings-of-time",
+   "name": "Wings of Time",
+   "category": "entertainment",
+   "lat": 1.2513337,
+   "lng": 103.8170772,
+   "emoji": "🎆",
+   "description": "A nightly outdoor show on Siloso Beach blending water, lasers, fire, and fireworks over the sea.",
+   "area": "Sentosa",
+   "hours": "Shows at 19:40 & 20:40",
+   "tip": "Premium seats are front and centre",
+   "sprite": [
+    1542,
+    2319,
+    244,
+    235
+   ]
+  },
+  {
+   "id": "pinnacle-duxton-skybridge",
+   "name": "Pinnacle@Duxton Skybridge",
+   "category": "landmark",
+   "lat": 1.2757339,
+   "lng": 103.8412111,
+   "emoji": "🌇",
+   "description": "A 50th-storey sky garden atop a landmark public housing complex, with sweeping city and harbour views.",
+   "area": "Tanjong Pagar",
+   "hours": "09:00–21:00",
+   "tip": "Cheap entry with an EZ-Link tap; sunset is best",
+   "sprite": [
+    1798,
+    2310,
+    244,
+    244
+   ]
+  },
+  {
+   "id": "changi-jurassic-mile",
+   "name": "Changi Jurassic Mile",
+   "category": "entertainment",
+   "lat": 1.3348184,
+   "lng": 103.9835053,
+   "emoji": "🦕",
+   "description": "A free outdoor cycling and walking trail near Changi Airport lined with life-sized dinosaur figures.",
+   "area": "Changi",
+   "hours": "Open 24 hours",
+   "tip": "Rent a bike at Changi Airport's Hub & Spoke",
+   "sprite": [
+    2054,
+    2310,
+    244,
+    244
+   ]
+  },
+  {
+   "id": "tiong-bahru-estate",
+   "name": "Tiong Bahru Estate",
+   "category": "culture",
+   "lat": 1.2844955,
+   "lng": 103.8336334,
+   "emoji": "🧱",
+   "description": "Singapore's oldest housing estate, a charming 1930s Art Deco enclave of curved low-rises, cafés, and bookshops.",
+   "area": "Tiong Bahru",
+   "hours": "Open 24 hours",
+   "tip": "Wander Eng Hoon and Yong Siak Streets",
+   "sprite": [
+    2312,
+    2310,
+    240,
+    244
+   ]
+  }
+ ]
+}

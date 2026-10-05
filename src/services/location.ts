@@ -46,6 +46,36 @@ export async function getCurrentPosition(): Promise<Reading> {
 }
 
 /**
+ * Follow the device while the app is open — for *showing* where the user is,
+ * nothing else. Independent of the exploration pipeline (which has its own
+ * drivers and filters), so the marker keeps moving while tracking is paused.
+ * Returns a stop function.
+ */
+export function watchPosition(onReading: (reading: Reading) => void): () => void {
+  let stopped = false;
+  let subscription: Location.LocationSubscription | null = null;
+  Location.watchPositionAsync(
+    { accuracy: Location.Accuracy.Balanced, timeInterval: 3_000, distanceInterval: 3 },
+    (pos) =>
+      onReading({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy ?? 999,
+        timestamp: pos.timestamp,
+      })
+  )
+    .then((sub) => {
+      if (stopped) sub.remove();
+      else subscription = sub;
+    })
+    .catch((e) => console.warn('position watch failed', e));
+  return () => {
+    stopped = true;
+    subscription?.remove();
+  };
+}
+
+/**
  * Instant best-effort fix from the OS location cache. Never waits on a fresh
  * GPS lock, so it returns in milliseconds (or `null` if the OS has nothing
  * cached). Used to center the map immediately on launch while a real fix is

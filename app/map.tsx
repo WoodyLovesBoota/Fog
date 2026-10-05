@@ -10,19 +10,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import {
-  Camera,
-  type CameraRef,
-  GeoJSONSource,
-  Images,
-  Layer,
-  Map as MapView,
-  Marker,
-  UserLocation,
-} from "@maplibre/maplibre-react-native";
-
 import { colors, fonts, press, shadows, type } from "@/theme/tokens";
-import { MAP_STYLE_URL, SINGAPORE_CENTER } from "@/config/mapConfig";
+import { MAP_RENDERER } from "@/config/mapConfig";
 import {
   ensureSingaporePack,
   type DownloadState,
@@ -32,7 +21,6 @@ import {
   getLastKnownPosition,
   getPermission,
 } from "@/services/location";
-import { fogMask } from "@/core/exploration/cellGeometry";
 import { haversineMeters } from "@/core/exploration/distance";
 import { AsyncVisitedRepository } from "@/adapters/storage/VisitedRepository.async";
 import {
@@ -44,7 +32,9 @@ import {
 } from "@/adapters/location/backgroundTracking";
 import { locationEvents } from "@/core/exploration/locationEvents";
 import { TOTAL_LAND_CELLS } from "@/data/singaporeLandCells";
-import { LandmarkPin } from "@/features/map/LandmarkPin";
+import { DioramaSurface } from "@/features/map/DioramaSurface";
+import { MapLibreSurface } from "@/features/map/MapLibreSurface";
+import type { MapSurfaceHandle } from "@/features/map/MapSurface";
 import { LANDMARKS, type Landmark } from "@/features/poi/landmarks";
 import { newlyDiscovered } from "@/features/poi/discovery";
 import { loadCollected, addCollected } from "@/adapters/storage/collectedRepo";
@@ -61,45 +51,10 @@ import { PrimaryButton } from "@/components/PrimaryButton";
 const TOAST_MS = 1400;
 /** Window after a first back press in which a second press exits the app. */
 const BACK_EXIT_MS = 2000;
-/** Static initial camera — hoisted so its reference is stable across renders.
-    A new object literal here would break <Camera>'s memo every render. */
-const INITIAL_VIEW_STATE = { center: SINGAPORE_CENTER, zoom: 15 } as const;
-/** Seamless cloud texture tiled across the fog mask (registered via <Images>). */
-const CLOUD_TILE = require("../assets/cloud-tile.png");
-const CLOUD_IMAGE_ID = "fog-cloud";
-/** Static fog paint — hoisted so MapLibre doesn't re-apply the style each render.
-    `fill-pattern` paints the cloud texture instead of a flat color; the mask is
-    still one feature, so the cloud cover costs nothing per unexplored cell. */
-const FOG_PAINT = {
-  "fill-pattern": CLOUD_IMAGE_ID,
-  "fill-opacity": 0.7,
-} as const;
-const FOG_IMAGES = { [CLOUD_IMAGE_ID]: CLOUD_TILE } as const;
-
-/** One landmark beacon on the map. Memoized so the frequent screen re-renders
-    (toast flashes, tracking toggles, sheet opens) never touch the native
-    markers: with a stable `onSelect`, every prop here is reference-equal
-    across renders, so MapLibre re-syncs a marker only when the landmark set
-    itself changes. The inline closure below is safe — it's inside the memo
-    boundary, recreated only when this component actually re-renders. */
-const PinMarker = memo(function PinMarker({
-  landmark,
-  onSelect,
-}: {
-  landmark: Landmark;
-  onSelect: (lm: Landmark) => void;
-}) {
-  return (
-    <Marker
-      id={landmark.id}
-      lngLat={[landmark.lng, landmark.lat]}
-      anchor="top"
-      onPress={() => onSelect(landmark)}
-    >
-      <LandmarkPin landmark={landmark} />
-    </Marker>
-  );
-});
+/** The map renderer for this build, and whether it needs the offline tile pack
+    (the diorama ships inside the app; only MapLibre has anything to download). */
+const Surface = MAP_RENDERER === "maplibre" ? MapLibreSurface : DioramaSurface;
+const NEEDS_OFFLINE_PACK = MAP_RENDERER === "maplibre";
 
 /** The static overlay chrome: Collection/Stats pills + recenter FAB. Memoized
     with stable callbacks so the screen's frequent re-renders (toast flashes,
@@ -171,14 +126,13 @@ const MapChrome = memo(function MapChrome({
 });
 
 /**
- * Real geographic map screen: MapLibre + Stadia tiles, gated behind a one-time
- * Singapore offline download. Once the pack is cached the map renders fully
- * offline.
+ * The map screen. It owns the exploration state and the overlay chrome; the map
+ * itself is drawn by a swappable surface (see `features/map/MapSurface`) — the
+ * 3D diorama by default, or MapLibre + Stadia tiles, which is gated behind a
+ * one-time Singapore offline download.
  *
- * Fog-of-war: one big mask polygon always covers the whole region; each visited
- * H3 cell is punched out as a hole so the basemap shows through ("cloud
- * cleared"). Because the mask is a single feature, the fog never flickers or
- * "ends" as you pan/zoom — there's no viewport to recompute.
+ * Fog-of-war: everything starts under cloud; each visited H3 cell is cleared.
+ * How that is painted is the surface's business.
  *
  * Visited cells are persisted (AsyncVisitedRepository): on launch we restore
  * the fog and seed the engine so already-cleared cells don't re-fire, and each
@@ -191,7 +145,9 @@ const MapChrome = memo(function MapChrome({
 export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [dl, setDl] = useState<DownloadState>({ status: "idle" });
+  const [dl, setDl] = useState<DownloadState>({
+    status: NEEDS_OFFLINE_PACK ? "idle" : "done",
+  });
   const [visitedCells, setVisitedCells] = useState<string[]>([]);
   // 'background' = OS task running (works while away); 'foreground' = fallback
   // watcher (app open only); 'off' = paused.
@@ -200,10 +156,11 @@ export default function MapScreen() {
   >("off");
   const tracking = trackingMode !== "off";
   const [toast, setToast] = useState<string | null>(null);
-  // MapLibre drops camera commands until its style finishes loading, so the
-  // initial recenter must wait for this flag (flipped by onDidFinishLoadingMap)
-  // rather than firing the instant the download completes.
+  // A surface drops camera commands until it has finished loading (MapLibre its
+  // style, the diorama its world), so the initial recenter must wait for this
+  // flag rather than firing the instant the screen mounts.
   const [mapReady, setMapReady] = useState(false);
+  const handleMapReady = useCallback(() => setMapReady(true), []);
 
   // Tapped landmark + its live distance from the user (meters), for the sheet.
   const [selected, setSelected] = useState<Landmark | null>(null);
@@ -229,9 +186,6 @@ export default function MapScreen() {
   // One persistence adapter for the whole screen lifetime.
   const repo = useMemo(() => new AsyncVisitedRepository(), []);
 
-  // Fog mask: rebuilt only when a cell is visited. Always covers the map.
-  const fogFC = useMemo(() => fogMask(visitedCells), [visitedCells]);
-
   // "N% of Singapore explored" — visited cells over the land-cell denominator.
   const progressPct = Math.min(
     100,
@@ -246,7 +200,7 @@ export default function MapScreen() {
     [collected]
   );
 
-  const cameraRef = useRef<CameraRef>(null);
+  const surfaceRef = useRef<MapSurfaceHandle>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Mirrors "is a tracking session active?" for the AppState listener, which must
   // read it without re-subscribing on every toggle.
@@ -306,7 +260,7 @@ export default function MapScreen() {
   }, []);
 
   const startDownload = useCallback(() => {
-    void ensureSingaporePack(setDl);
+    if (NEEDS_OFFLINE_PACK) void ensureSingaporePack(setDl);
   }, []);
 
   // Hard permission gate: the map is unreachable without location access.
@@ -437,8 +391,8 @@ export default function MapScreen() {
   // immediately), then a fresh `getCurrentPosition` refines it. Only fires once
   // per mount, so the user can pan freely afterwards.
   //
-  // We gate on `mapReady` (not just dl.status): MapLibre silently ignores
-  // jumpTo/flyTo until its style has loaded, so firing the moment the download
+  // We gate on `mapReady` (not just dl.status): a surface silently ignores
+  // jumpTo/flyTo until it has loaded, so firing the moment the download
   // finishes would no-op and leave the camera stuck on the Singapore default —
   // the user would then have to tap the recenter FAB to move at all.
   useEffect(() => {
@@ -447,16 +401,12 @@ export default function MapScreen() {
     (async () => {
       const last = await getLastKnownPosition();
       if (!cancelled && last) {
-        cameraRef.current?.jumpTo({ center: [last.lng, last.lat], zoom: 15 });
+        surfaceRef.current?.jumpTo(last);
       }
       try {
         const pos = await getCurrentPosition();
         if (!cancelled) {
-          cameraRef.current?.flyTo({
-            center: [pos.lng, pos.lat],
-            zoom: 16,
-            duration: 500,
-          });
+          surfaceRef.current?.flyTo(pos, 500);
         }
       } catch (e) {
         console.warn("initial center failed", e);
@@ -540,6 +490,16 @@ export default function MapScreen() {
     setSelected(null);
   }, []);
 
+  // A tap reported by the map surface: a landmark opens its sheet; `null` is a
+  // tap on the map around them, which puts an open sheet away.
+  const selectFromMap = useCallback(
+    (lm: Landmark | null) => {
+      if (lm) openLandmark(lm);
+      else closeSheet();
+    },
+    [openLandmark, closeSheet]
+  );
+
   // A lone discovery drives the single celebration modal; two-or-more routes to
   // the list sheet instead, so `singleDiscovery` is null whenever the sheet owns
   // the batch — the two are mutually exclusive by length.
@@ -579,22 +539,14 @@ export default function MapScreen() {
     try {
       const last = await getLastKnownPosition();
       if (last) {
-        cameraRef.current?.flyTo({
-          center: [last.lng, last.lat],
-          zoom: 16,
-          duration: 900,
-        });
+        surfaceRef.current?.flyTo(last, 900);
       }
       try {
         const pos = await getCurrentPosition();
         if (last && haversineMeters(pos.lat, pos.lng, last.lat, last.lng) < 25) {
           return;
         }
-        cameraRef.current?.flyTo({
-          center: [pos.lng, pos.lat],
-          zoom: 16,
-          duration: 900,
-        });
+        surfaceRef.current?.flyTo(pos, 900);
       } catch (e) {
         console.warn("recenter failed", e);
       }
@@ -656,35 +608,18 @@ export default function MapScreen() {
 
   return (
     <View style={styles.page}>
-      {/* After download this renders from the offline cache. */}
-      <MapView
-        style={styles.map}
-        mapStyle={MAP_STYLE_URL}
-        attribution
-        onDidFinishLoadingMap={() => setMapReady(true)}
-      >
-        <Camera ref={cameraRef} initialViewState={INITIAL_VIEW_STATE} />
-        <UserLocation />
-
-        {/* Register the seamless cloud texture used by the fog fill-pattern. */}
-        <Images images={FOG_IMAGES} />
-
-        {/* Fog-of-war: one mask polygon covers the whole region, painted with a
-            tiled cloud texture; visited cells are punched out as holes, so the
-            basemap shows through there. */}
-        <GeoJSONSource id="fog-mask" data={fogFC}>
-          <Layer id="fog-fill" type="fill" paint={FOG_PAINT} />
-        </GeoJSONSource>
-
-        {/* Landmark beacons — native Markers sit ON TOP of the fog and stay
-            visible everywhere, names included. Anchored at the pin head; tapping
-            one opens the detail sheet. Only the 10 anchors + already-collected
-            landmarks are drawn; the undiscovered 90 are intentionally absent so
-            their location can't be read off the map. */}
-        {visiblePins.map((lm) => (
-          <PinMarker key={lm.id} landmark={lm} onSelect={openLandmark} />
-        ))}
-      </MapView>
+      {/* The map itself. Landmark beacons sit ON TOP of the fog and stay visible
+          everywhere; only the 10 anchors + already-collected landmarks are
+          passed down — the undiscovered 90 are intentionally absent so their
+          location can't be read off the map. */}
+      <Surface
+        ref={surfaceRef}
+        visitedCells={visitedCells}
+        pins={visiblePins}
+        selectedId={selected?.id ?? null}
+        onSelectLandmark={selectFromMap}
+        onReady={handleMapReady}
+      />
 
       {/* Progress badge (top-left): hex meter + "% explored". */}
       <View
@@ -765,7 +700,6 @@ export default function MapScreen() {
 
 const styles = StyleSheet.create({
   page: { flex: 1, backgroundColor: colors.canvas },
-  map: { flex: 1 },
   center: {
     flex: 1,
     alignItems: "center",
